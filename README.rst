@@ -25,7 +25,7 @@ Laboratory Works:
 
 1. `Laboratory work #7. Neural Language Model Inference and Evaluation <https://github.com/fipl-hse/2026-hello-llm/tree/main/lab_7_llm>`__
 
-   * Deadline: **TBA**
+   * Deadline: **December 18**
 
 2. `Laboratory work #8. LLM Interpretation <https://github.com/fipl-hse/2026-hello-llm/tree/main/lab_8_sft>`__
 

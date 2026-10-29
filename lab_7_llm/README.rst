@@ -1,4 +1,4 @@
-.. _lab-7-llm:
+.. _lab-7-llm-2026:
 
 Laboratory work №7. Large Language Models no. 1
 ===============================================
@@ -94,11 +94,11 @@ Technical solution
 
 .. important::
 
-    - ``torch`` module version 2.9.1 needs to be installed using
+    - ``torch`` module version 2.14.1 needs to be installed using
       ``--extra-index-url https://download.pytorch.org/whl/cpu``
       in ``requirements.txt`` file.
 
-    - ``transformers`` module version 4.50.3 needs to be installed.
+    - ``transformers`` module version 5.20.1 needs to be installed.
 
 Configuring model
 -----------------
@@ -161,7 +161,7 @@ Stage 0. Start working on the laboratory work
 
 Start your implementation by selecting a model and dataset you are going to use.
 You can find all available combinations
-in the `table <https://docs.google.com/spreadsheets/d/1UEEylqXeSjtFyUtPzyEMiFhhdCukmmuIG4d1ne0y_mU/>`__.
+in the `table <https://docs.google.com/spreadsheets/d/1pTPETVp6rFywmMyuGVvTOuVcUNyQTJodzo-GMTw0z7Y/>`__.
 
 .. note:: All logic for instantiating and using needed abstractions
           should be implemented in a ``main()`` function of a ``start.py`` module.
@@ -194,7 +194,7 @@ This class inherits from
 which has the following internal attributes:
 
     * ``self._hf_name`` - string with the name of the HuggingFace dataset;
-    * ``self._raw_data`` - downloaded pd.DataFrame.
+    * ``self._raw_data`` - downloaded ``pd.DataFrame``.
 
 .. important:: To get data from ``RawDataImporter`` abstraction, use
                :py:attr:`core_utils.llm.raw_data_importer.AbstractRawDataImporter.raw_data` property.
@@ -218,7 +218,7 @@ Implement :py:meth:`lab_7_llm.main.RawDataImporter.obtain` method
 which allows to download dataset and fill ``self._raw_data`` attribute.
 
 You have to use
-`load_dataset() <https://huggingface.co/docs/datasets/v4.4.2/en
+`load_dataset() <https://huggingface.co/docs/datasets/v4.8.4/en
 /package_reference/loading_methods#datasets.load_dataset>`__ function
 from ``datasets`` module.
 
@@ -276,11 +276,11 @@ which allows to preprocess dataset.
 .. important:: You can find all needed preprocessing for your
                combination of model and dataset choosing appropriate task:
 
-                   * :ref:`classification-label`
-                   * :ref:`generation-label`
-                   * :ref:`nli-label`
-                   * :ref:`nmt-label`
-                   * :ref:`summarization-label`
+                   * :ref:`classification-label-2026`
+                   * :ref:`generation-label-2026`
+                   * :ref:`nli-label-2026`
+                   * :ref:`nmt-label-2026`
+                   * :ref:`summarization-label-2026`
 
 .. note:: According to preprocessing instructions in task cards,
           you should change column names. To do this use fields of the
@@ -354,8 +354,8 @@ Stage 4. Introduce model pipeline abstraction: :py:class:`lab_7_llm.main.LLMPipe
 
 Now we are ready to load our model.
 
-To initialize our model, analyze its properties,
-infer model on the whole dataset and one sample from it you need to implement
+To initialize our model and infer it
+on the whole dataset and one sample from it you need to implement
 :py:class:`lab_7_llm.main.LLMPipeline` abstraction.
 
 This class inherits from
@@ -515,7 +515,7 @@ which allows to infer a single batch.
 
 .. note:: There are going to be a few peculiarities
          when implementing method for generation closed QA task.
-         You can find them in :ref:`generation-label`.
+         You can find them in :ref:`generation-label-2026`.
 
 .. important:: You have to rewrite ``infer_sample()`` and ``infer_dataset()`` methods
                so that these methods use ``_infer_batch()`` method.
@@ -529,7 +529,7 @@ Demonstrate model inference on one sample from the dataset and on the whole data
 in the ``main()`` function of the ``start.py`` module.
 
 .. note:: After dataset inference you have to save
-          you predictions to ``dist/predictions.csv`` file in ``start.py``.
+          your predictions to ``dist/predictions.csv`` file in ``start.py``.
 
 Stage 7. Introduce evaluation abstraction: ``TaskEvaluator``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -572,10 +572,10 @@ references using the specified metric.
          en/package_reference/loading_methods#evaluate.load>`__ method from ``evaluate`` module.
 
 .. important:: There are some additional parameters for **Summarization** task
-               which you can find in :ref:`summarization-label`.
+               which you can find in :ref:`summarization-label-2026`.
 
 .. note:: To compute the metrics you have to use
-          `compute() <https://huggingface.co/docs/datasets/v4.4.2/
+          `compute() <https://huggingface.co/docs/datasets/v4.8.4/
           en/package_reference/main_classes#datasets.Metric.compute>`__
           method from ``evaluate`` module.
 

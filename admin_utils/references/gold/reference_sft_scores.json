@@ -1,0 +1,164 @@
+{
+    "Babelscape/wikineural-multilingual-ner": {
+        "Babelscape/wikineural": {
+            "accuracy": 0.99153
+        }
+    },
+    "Helsinki-NLP/opus-mt-en-fr": {
+        "enimai/MuST-C-fr": {
+            "bleu": 0.45252
+        }
+    },
+    "Helsinki-NLP/opus-mt-ru-en": {
+        "shreevigneshs/iwslt-2023-en-ru-train-val-split-0.2": {
+            "bleu": 0.33373
+        }
+    },
+    "Helsinki-NLP/opus-mt-ru-es": {
+        "nuvocare/Ted2020_en_es_fr_de_it_ca_pl_ru_nl": {
+            "bleu": 0.24094
+        }
+    },
+    "IlyaGusev/rubertconv_toxic_clf": {
+        "Arsive/toxicity_classification_jigsaw": {
+            "f1": 0.83999
+        },
+        "s-nlp/en_paradetox_toxicity": {
+            "f1": 0.72999
+        }
+    },
+    "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli": {
+        "mnli": {
+            "accuracy": 0.89000
+        }
+    },
+    "UrukHan/t5-russian-summarization": {
+        "CarlBrendt/Summ_Dialog_News": {
+            "bleu": 0.02551,
+            "rouge": 0.07085
+        },
+        "IlyaGusev/gazeta": {
+            "bleu": 0.04654,
+            "rouge": 0.14674
+        },
+        "d0rj/curation-corpus-ru": {
+            "bleu": 0.03762,
+            "rouge": 0.19496
+        }
+    },
+    "XSY/albert-base-v2-imdb-calssification": {
+        "imdb": {
+            "f1": 1.00000
+        }
+    },
+    "aiknowyou/it-emotion-analyzer": {
+        "dair-ai/emotion": {
+            "f1": 0.48999
+        }
+    },
+    "blanchefort/rubert-base-cased-sentiment-rusentiment": {
+        "blinoff/healthcare_facilities_reviews": {
+            "f1": 0.95999
+        },
+        "blinoff/kinopoisk": {
+            "f1": 0.91000
+        }
+    },
+    "cointegrated/rubert-base-cased-nli-threeway": {
+        "cointegrated/nli-rus-translated-v2021": {
+            "accuracy": 0.78000
+        },
+        "xnli": {
+            "accuracy": 0.52000
+        }
+    },
+    "cointegrated/rubert-tiny-bilingual-nli": {
+        "terra": {
+            "accuracy": 0.46000
+        }
+    },
+    "cointegrated/rubert-tiny-toxicity": {
+        "OxAISH-AL-LLM/wiki_toxic": {
+            "f1": 0.81999
+        }
+    },
+    "cointegrated/rubert-tiny2-cedr-emotion-detection": {
+        "seara/ru_go_emotions": {
+            "f1": 0.52000
+        }
+    },
+    "dslim/distilbert-NER": {
+        "eriktks/conll2003": {
+            "accuracy": 0.99259
+        }
+    },
+    "fabriceyhc/bert-base-uncased-ag_news": {
+        "ag_news": {
+            "f1": 0.96999
+        }
+    },
+    "google-t5/t5-small": {
+        "RocioUrquijo/en_de": {
+            "bleu": 0.24680
+        }
+    },
+    "mrm8488/bert-mini2bert-mini-finetuned-cnn_daily_mail-summarization": {
+        "ccdv/govreport-summarization": {
+            "bleu": 0.00043,
+            "rouge": 0.10673
+        },
+        "ccdv/pubmed-summarization": {
+            "bleu": 0.01992,
+            "rouge": 0.14722
+        }
+    },
+    "mrm8488/bert-small2bert-small-finetuned-cnn_daily_mail-summarization": {
+        "ccdv/govreport-summarization": {
+            "bleu": 0.00099,
+            "rouge": 0.11157
+        },
+        "ccdv/pubmed-summarization": {
+            "bleu": 0.03343,
+            "rouge": 0.17629
+        },
+        "cnn_dailymail": {
+            "bleu": 0.05569,
+            "rouge": 0.22099
+        }
+    },
+    "nandakishormpai/t5-small-machine-articles-tag-generation": {
+        "ccdv/govreport-summarization": {
+            "bleu": 0.00000,
+            "rouge": 0.02891
+        },
+        "ccdv/pubmed-summarization": {
+            "bleu": 0.00049,
+            "rouge": 0.07863
+        },
+        "cnn_dailymail": {
+            "bleu": 0.06624,
+            "rouge": 0.17867
+        }
+    },
+    "papluca/xlm-roberta-base-language-detection": {
+        "papluca/language-identification": {
+            "f1": 1.00000
+        }
+    },
+    "s-nlp/russian_toxicity_classifier": {
+        "d0rj/rudetoxifier_data": {
+            "f1": 1.00000
+        },
+        "s-nlp/ru_non_detoxified": {
+            "f1": 0.77000
+        },
+        "s-nlp/ru_paradetox_toxicity": {
+            "f1": 0.72999
+        }
+    },
+    "tatiana-merz/turkic-cyrillic-classifier": {
+        "tatiana-merz/cyrillic_turkic_langs": {
+            "f1": 0.98999
+        }
+    }
+}

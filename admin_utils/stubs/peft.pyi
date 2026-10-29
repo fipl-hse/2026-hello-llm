@@ -1,0 +1,6 @@
+from typing import Any
+
+class LoraConfig:
+    def __init__(self, *args: Any, **kwargs: Any) -> None: ...
+
+def get_peft_model(model: Any, peft_config: Any, *args: Any, **kwargs: Any) -> Any: ...

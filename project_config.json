@@ -1,0 +1,126 @@
+{
+    "labs": [],
+    "addons": [
+        {
+            "name": "core_utils",
+            "need_uml": true
+        },
+        {
+            "name": "seminars"
+        },
+        {
+            "name": "admin_utils"
+        },
+        {
+            "name": "reference_lab_nmt",
+            "coverage": 51,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_nmt_sft",
+            "coverage": 95,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_generation",
+            "coverage": 54,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_classification",
+            "coverage": 50,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_classification_sft",
+            "coverage": 94,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_summarization",
+            "coverage": 46,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_summarization_sft",
+            "coverage": 95,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_ner",
+            "coverage": 83,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_ner_sft",
+            "coverage": 0,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_nli",
+            "coverage": 74,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_nli_sft",
+            "coverage": 94,
+            "run_tests": true
+        },
+        {
+            "name": "reference_lab_open_qa",
+            "coverage": 71,
+            "run_tests": true
+        }
+    ],
+    "repository": {
+        "admins": [
+            "demid5111",
+            "alexgiving",
+            "VSvir",
+            "kaizerova-a"
+        ],
+        "pr_name_regex": "Laboratory work #\\d, \\w+ \\w+ - 2\\dFPL\\d",
+        "pr_name_example": "Laboratory work #1, Andrei Kashchikhin - 21FPL2"
+    },
+    "stubs_config": {
+        "accepted_modules": {
+            "typing": [
+                "*"
+            ],
+            "json": [
+                "load"
+            ]
+        },
+        "specific_file_rules": {
+            "service.py": {
+                "replacement": {
+                    "lab_8_sft": "app, pre_trained_pipeline, fine_tuned_pipeline = None, None, None"
+                }
+            }
+        }
+    },
+    "newline_config": [
+        "venv",
+        "\\.venv",
+        "\\.git",
+        "\\.idea",
+        "\\.coverage",
+        "\\.mypy_cache",
+        "\\.pytest_cache",
+        "__pycache__",
+        "build",
+        "tmp",
+        "intersphinx",
+        "test_tmp",
+        "dist",
+        "1_raw\\.txt$",
+        "__init__\\.cpython-310\\.pyc$",
+        "test_params\\.cpython-310\\.pyc$",
+        "\\.jpg$",
+        "\\.png$",
+        "\\.pkl$",
+        "\\.udpipe$",
+        "\\.zip$"
+    ]
+}
+

@@ -56,7 +56,8 @@ match_dir = '^(?!(venv|tests|some_sub_dir)).*'
 max-line-length = 100
 exclude = [
     'venv*',
-    'build/'
+    'build/',
+    'admin_utils/references/get_model_analytics.py',
 ]
 select = ['I']
 count = true
@@ -163,9 +164,18 @@ module = [
     'lab_8_sft.main',
 ]
 disable_error_code = [
+    'import-not-found',
     'no-any-unimported',
     'empty-body',
     'name-defined',
+]
+
+[[tool.mypy.overrides]]
+module = [
+    'admin_utils.references.get_model_analytics',
+]
+disable_error_code = [
+    'import-not-found',
 ]
 
 [[tool.mypy.overrides]]

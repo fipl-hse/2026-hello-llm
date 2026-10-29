@@ -7,6 +7,7 @@ if [[ "$1" == "public" ]]; then
     "admin_utils"
     "core_utils"
     "seminars"
+    "lab_7_llm"
   )
 else
   DIRS_TO_CHECK=(

@@ -1,5 +1,14 @@
 {
-    "labs": [],
+    "labs": [
+        {
+            "name": "lab_7_llm",
+            "coverage": 86,
+            "stubs": [
+                "main.py",
+                "start.py"
+            ]
+        }
+    ],
     "addons": [
         {
             "name": "core_utils",
@@ -123,4 +132,3 @@
         "\\.zip$"
     ]
 }
-

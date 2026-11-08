@@ -1,0 +1,8 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+datasets==5.1.0
+pandas==3.1.1
+protobuf==7.36.2
+sentencepiece==0.2.3
+tiktoken==0.14.0
+torch==2.14.1
+transformers==5.20.1

@@ -11,6 +11,7 @@ def main() -> None:
     Run the translation pipeline.
     """
     result = None
+    print("Hello, world!")
     assert result is not None, "Demo does not work correctly"
 
 

@@ -1,8 +1,8 @@
 {
   "parameters": {
-    "model": "",
-    "dataset": "",
+    "model": "EleutherAI/pythia-160m-deduped",
+    "dataset": "tatsu-lab/alpaca",
     "metrics": []
   },
-  "target_score": 0
+  "target_score": 8
 }

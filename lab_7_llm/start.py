@@ -10,15 +10,10 @@ from admin_utils.constants import (
     GLOBAL_BATCH_SIZE_TEST,
     GLOBAL_MAX_LENGTH,
 )
-from core_utils.project.lab_settings import LabSettings
 from core_utils.llm.time_decorator import report_time
+from core_utils.project.lab_settings import LabSettings
+from lab_7_llm.main import LLMPipeline, RawDataImporter, RawDataPreprocessor, TaskDataset
 
-from lab_7_llm.main import (
-    LLMPipeline,
-    RawDataImporter,
-    RawDataPreprocessor,
-    TaskDataset
-)
 SETTINGS_PATH = Path(__file__).parent / "settings.json"
 PREDICTS_PATH = Path(__file__).parent / "dist" / "predictions.csv"
 

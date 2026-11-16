@@ -19,6 +19,8 @@ from lab_7_llm.main import (
     RawDataPreprocessor,
     TaskDataset
 )
+SETTINGS_PATH = Path(__file__).parent / "settings.json"
+PREDICTS_PATH = Path(__file__).parent / "dist" / "predictions.csv"
 
 
 @report_time
@@ -26,8 +28,7 @@ def main() -> None:
     """
     Run the translation pipeline.
     """
-    settings_path = Path(__file__).parent / "settings.json"
-    settings = LabSettings(settings_path)
+    settings = LabSettings(SETTINGS_PATH)
 
     importer = RawDataImporter(settings.parameters.dataset)
     importer.obtain()
@@ -38,7 +39,7 @@ def main() -> None:
     print("Dataset analysis:")
     for property_name, value in dataset_analysis.items():
         print(f"{property_name}: {value}")
-        
+
     preprocessor.transform()
 
     dataset = TaskDataset(preprocessor.data.iloc[:100])
@@ -51,6 +52,11 @@ def main() -> None:
         device=DEVICE,
     )
 
+    result = pipeline.infer_dataset()
+    PREDICTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    result.to_csv(PREDICTS_PATH, index=False)
+
+    print(result.head())
     # result = None
     # assert result is not None, "Demo does not work correctly"
 

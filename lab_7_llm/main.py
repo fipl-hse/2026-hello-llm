@@ -6,7 +6,7 @@ Working with Large Language Models.
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Iterable, Sequence
 
 import pandas as pd
 import torch
@@ -14,7 +14,7 @@ from datasets import load_dataset
 
 from pandas import DataFrame
 from torch.utils.data import DataLoader, Dataset
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer 
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from core_utils.llm.raw_data_importer import AbstractRawDataImporter
 from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
 from core_utils.llm.time_decorator import report_time
@@ -62,7 +62,6 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         data_norm = data.replace(r"^\s*$", pd.NA, regex=True)
         data_cleaned = data_norm.dropna()
         lengths = data_cleaned['en'].str.len()
-         
         empty_rows = data_norm.isna().any(axis=1).sum()
 
         return {
@@ -84,7 +83,7 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
             "EN": ColumnNames.SOURCE.value,
             "DE": ColumnNames.TARGET.value
         })
-        print("Фактические столбцы:", self._data.columns.tolist())
+
         self._data = self._data.replace(r"^\s*$", pd.NA, regex=True)
         self._data = self._data.dropna()
         self._data = self._data.drop_duplicates()
@@ -108,6 +107,7 @@ class TaskDataset(Dataset):
         """
         self._data = data
 
+
     def __len__(self) -> int:
         """
         Return the number of items in the dataset.
@@ -116,6 +116,7 @@ class TaskDataset(Dataset):
             int: The number of items in the dataset
         """
         return len(self._data)
+
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -139,7 +140,7 @@ class TaskDataset(Dataset):
             pandas.DataFrame: Preprocessed DataFrame
         """
         return self._data
-    
+
 
 class LLMPipeline(AbstractLLMPipeline):
     """
@@ -179,7 +180,13 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             str | None: A prediction
         """
-        
+        if self._model is None:
+            return None
+
+        predict = self._infer_batch([sample])[0]
+        return predict
+
+
     @report_time
     def infer_dataset(self) -> pd.DataFrame:
         """
@@ -188,6 +195,19 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
+        loader = DataLoader(self._dataset, batch_size=self._batch_size,
+                            shuffle=False, collate_fn=list)
+        predicts = []
+
+        for batch in loader:
+            batch_predicts = self._infer_batch(batch)
+            predicts.extend(batch_predicts)
+
+        result = self._dataset.data.copy()
+        result[ColumnNames.PREDICTION.value] = predicts
+
+        return result
+
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -200,6 +220,24 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
+        source_text = [sample[0] for sample in sample_batch]
+        inputs = self._tokenizer(
+            source_text,
+            padding=True,
+            truncation=True,
+            max_length=self._max_length,
+            return_tensors='pt'
+        )
+
+        inputs = inputs.to(self._device)
+
+        generated_ids = self._model.generate(**inputs, max_length=self._max_length)
+
+        predicts = self._tokenizer.batch_decode(
+            generated_ids,
+            skip_special_tokens=True,
+        )
+        return predicts
 
 
 class TaskEvaluator(AbstractTaskEvaluator):

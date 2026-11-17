@@ -6,6 +6,20 @@
             "stubs": [
                 "main.py",
                 "start.py"
+            ],
+            "settings": {
+                "ignore": [
+                    "lab_8_sft"
+                ]
+            }
+        },
+        {
+            "name": "lab_8_sft",
+            "coverage": 78,
+            "stubs": [
+                "main.py",
+                "service.py",
+                "start.py"
             ]
         }
     ],

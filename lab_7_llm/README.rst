@@ -94,11 +94,11 @@ Technical solution
 
 .. important::
 
-    - ``torch`` module version 2.9.1 needs to be installed using
+    - ``torch`` module version 2.14.1 needs to be installed using
       ``--extra-index-url https://download.pytorch.org/whl/cpu``
       in ``requirements.txt`` file.
 
-    - ``transformers`` module version 4.50.3 needs to be installed.
+    - ``transformers`` module version 5.20.1 needs to be installed.
 
 Configuring model
 -----------------
@@ -161,7 +161,7 @@ Stage 0. Start working on the laboratory work
 
 Start your implementation by selecting a model and dataset you are going to use.
 You can find all available combinations
-in the `table <https://docs.google.com/spreadsheets/d/1UEEylqXeSjtFyUtPzyEMiFhhdCukmmuIG4d1ne0y_mU/>`__.
+in the `table <https://docs.google.com/spreadsheets/d/1pTPETVp6rFywmMyuGVvTOuVcUNyQTJodzo-GMTw0z7Y/edit?gid=963029521#gid=963029521>`__.
 
 .. note:: All logic for instantiating and using needed abstractions
           should be implemented in a ``main()`` function of a ``start.py`` module.
@@ -276,11 +276,11 @@ which allows to preprocess dataset.
 .. important:: You can find all needed preprocessing for your
                combination of model and dataset choosing appropriate task:
 
-                   * :ref:`classification-label`
-                   * :ref:`generation-label`
-                   * :ref:`nli-label`
-                   * :ref:`nmt-label`
-                   * :ref:`summarization-label`
+                   * `Classification <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_CLASSIFICATION.html>`__
+                   * `Generation <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_GENERATION.html>`__
+                   * `NLI <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_NLI.html>`__
+                   * `Neural Machine Translation <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_NMT.html>`__
+                   * `Summarization <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_SUMMARIZATION.html>`__
 
 .. note:: According to preprocessing instructions in task cards,
           you should change column names. To do this use fields of the
@@ -354,8 +354,8 @@ Stage 4. Introduce model pipeline abstraction: :py:class:`lab_7_llm.main.LLMPipe
 
 Now we are ready to load our model.
 
-To initialize our model, analyze its properties,
-infer model on the whole dataset and one sample from it you need to implement
+To initialize our model and infer it
+on the whole dataset and one sample from it you need to implement
 :py:class:`lab_7_llm.main.LLMPipeline` abstraction.
 
 This class inherits from
@@ -515,7 +515,7 @@ which allows to infer a single batch.
 
 .. note:: There are going to be a few peculiarities
          when implementing method for generation closed QA task.
-         You can find them in :ref:`generation-label`.
+         You can find them in `Generation <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_GENERATION.html>`__ task card.
 
 .. important:: You have to rewrite ``infer_sample()`` and ``infer_dataset()`` methods
                so that these methods use ``_infer_batch()`` method.
@@ -529,7 +529,7 @@ Demonstrate model inference on one sample from the dataset and on the whole data
 in the ``main()`` function of the ``start.py`` module.
 
 .. note:: After dataset inference you have to save
-          you predictions to ``dist/predictions.csv`` file in ``start.py``.
+          your predictions to ``dist/predictions.csv`` file in ``start.py``.
 
 Stage 7. Introduce evaluation abstraction: ``TaskEvaluator``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -572,7 +572,7 @@ references using the specified metric.
          en/package_reference/loading_methods#evaluate.load>`__ method from ``evaluate`` module.
 
 .. important:: There are some additional parameters for **Summarization** task
-               which you can find in :ref:`summarization-label`.
+               which you can find in `Summarization <https://fipl-hse.github.io/docs/llm_2026/task_cards/TASK_SUMMARIZATION.html>`__ task card.
 
 .. note:: To compute the metrics you have to use
           `compute() <https://huggingface.co/docs/datasets/v4.4.2/

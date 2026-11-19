@@ -5,10 +5,11 @@ Working with Large Language Models.
 """
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
+import json
 from typing import Iterable, Sequence
 from core_utils.llm.llm_pipeline import AbstractLLMPipeline
 from core_utils.llm.raw_data_importer import AbstractRawDataImporter
-from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
 from core_utils.llm.task_evaluator import AbstractTaskEvaluator
 from core_utils.llm.time_decorator import report_time
 import torch
@@ -32,10 +33,11 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
-        ds = datasets.load_dataset(self._hf_name, split=datasets.Split.TEST).to_pandas()
-        if not isinstance(ds, pd.DataFrame):
+
+        df = datasets.load_dataset(self._hf_name, split=datasets.Split.TRAIN).to_pandas()
+        if not isinstance(df, pd.DataFrame):
             raise TypeError('Downloaded dataset is not pd.DataFrame')
-        self._raw_data = ds
+        self._raw_data = df
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
@@ -59,6 +61,24 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        df = self._raw_data.copy()
+
+        df = df[df['category'] == "Closed QA"]
+
+        df = df[['prompt', 'messages']]
+
+        df["messages"] = df["messages"].apply(lambda x: f"{x}")
+        
+        df = df.rename(columns={"prompt": "question"})
+        
+        df = df.reset_index(drop=True)
+
+        parsed = df["messages"].apply(json.loads)
+        df[ColumnNames.CONTEXT.value] = parsed.str[0].str["content"]
+        df[ColumnNames.TARGET.value] = parsed.str[1].str["content"]
+        df = df.drop(columns=["messages"])
+        
+        self._data = df
 
 
 class TaskDataset(Dataset):

@@ -15,7 +15,8 @@ def main() -> None:
     hf_name = 'HuggingFaceH4/no_robots'
     importer = RawDataImporter(hf_name)
     preprocessor = RawDataPreprocessor(importer.obtain())
-
+    importer.obtain()
+    print(importer.raw_data.head())
     # result = None
     print("Hello, world!")
     # assert result is not None, "Demo does not work correctly"

@@ -6,13 +6,24 @@ Working with Large Language Models.
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 from typing import Iterable, Sequence
-
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
+import torch
+from torch.utils.data import Dataset
+import datasets
+import pandas as pd
 
 class RawDataImporter(AbstractRawDataImporter):
     """
     A class that imports the HuggingFace dataset.
     """
 
+    def __init__(self, hf_name: str):
+        super().__init__(hf_name)
+    
     @report_time
     def obtain(self) -> None:
         """
@@ -21,12 +32,19 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
+        ds = datasets.load_dataset(self._hf_name, split=datasets.Split.TEST).to_pandas()
+        if not isinstance(ds, pd.DataFrame):
+            raise TypeError('Downloaded dataset is not pd.DataFrame')
+        self._raw_data = ds
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
     """
     A class that analyzes and preprocesses a dataset.
     """
+
+    def __init__(self, raw_data):
+        super().__init__(raw_data)
 
     def analyze(self) -> dict:
         """
@@ -159,3 +177,4 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
+

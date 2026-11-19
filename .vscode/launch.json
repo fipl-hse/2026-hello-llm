@@ -10,7 +10,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/lab_7_llm/start.py",
-            "cwd": "${workspaceFolder}/lab_7_llm",
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"

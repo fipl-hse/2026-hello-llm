@@ -134,7 +134,6 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    'admin_utils.external_pr_files.create_external_pr',
     'admin_utils.github.update_forks',
     'admin_utils.github.update_fork',
     'admin_utils.uml.check_diagrams',

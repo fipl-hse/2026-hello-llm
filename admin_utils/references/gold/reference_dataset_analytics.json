@@ -63,13 +63,13 @@
         "dataset_sample_max_len": 2048,
         "dataset_sample_min_len": 4
     },
-    "ag_news": {
-        "dataset_columns": 2,
+    "abisee/cnn_dailymail": {
+        "dataset_columns": 3,
         "dataset_duplicates": 0,
         "dataset_empty_rows": 0,
-        "dataset_number_of_samples": 7600,
-        "dataset_sample_max_len": 892,
-        "dataset_sample_min_len": 100
+        "dataset_number_of_samples": 11490,
+        "dataset_sample_max_len": 11991,
+        "dataset_sample_min_len": 293
     },
     "blinoff/healthcare_facilities_reviews": {
         "dataset_columns": 7,
@@ -102,14 +102,6 @@
         "dataset_number_of_samples": 6658,
         "dataset_sample_max_len": 335993,
         "dataset_sample_min_len": 126
-    },
-    "cnn_dailymail": {
-        "dataset_columns": 3,
-        "dataset_duplicates": 0,
-        "dataset_empty_rows": 0,
-        "dataset_number_of_samples": 11490,
-        "dataset_sample_max_len": 11991,
-        "dataset_sample_min_len": 293
     },
     "cointegrated/nli-rus-translated-v2021": {
         "dataset_columns": 10,
@@ -167,13 +159,21 @@
         "dataset_sample_max_len": 109,
         "dataset_sample_min_len": 1
     },
-    "imdb": {
-        "dataset_columns": 2,
-        "dataset_duplicates": 199,
+    "facebook/xnli": {
+        "dataset_columns": 3,
+        "dataset_duplicates": 0,
         "dataset_empty_rows": 0,
-        "dataset_number_of_samples": 25000,
-        "dataset_sample_max_len": 12988,
-        "dataset_sample_min_len": 32
+        "dataset_number_of_samples": 2490,
+        "dataset_sample_max_len": 310,
+        "dataset_sample_min_len": 8
+    },
+    "fancyzhx/ag_news": {
+        "dataset_columns": 2,
+        "dataset_duplicates": 0,
+        "dataset_empty_rows": 0,
+        "dataset_number_of_samples": 7600,
+        "dataset_sample_max_len": 892,
+        "dataset_sample_min_len": 100
     },
     "jtatman/databricks-dolly-8k-qa-open-close": {
         "dataset_columns": 5,
@@ -182,6 +182,14 @@
         "dataset_number_of_samples": 7706,
         "dataset_sample_max_len": 3502,
         "dataset_sample_min_len": 12
+    },
+    "kuznetsoffandrey/sberquad": {
+        "dataset_columns": 5,
+        "dataset_duplicates": 0,
+        "dataset_empty_rows": 0,
+        "dataset_number_of_samples": 5036,
+        "dataset_sample_max_len": 3489,
+        "dataset_sample_min_len": 10
     },
     "lionelchg/dolly_closed_qa": {
         "dataset_columns": 5,
@@ -255,14 +263,6 @@
         "dataset_sample_max_len": 179,
         "dataset_sample_min_len": 2
     },
-    "sberquad": {
-        "dataset_columns": 5,
-        "dataset_duplicates": 0,
-        "dataset_empty_rows": 0,
-        "dataset_number_of_samples": 5036,
-        "dataset_sample_max_len": 3489,
-        "dataset_sample_min_len": 10
-    },
     "seara/ru_go_emotions": {
         "dataset_columns": 4,
         "dataset_duplicates": 0,
@@ -278,6 +278,14 @@
         "dataset_number_of_samples": 600,
         "dataset_sample_max_len": 265,
         "dataset_sample_min_len": 14
+    },
+    "stanfordnlp/imdb": {
+        "dataset_columns": 2,
+        "dataset_duplicates": 199,
+        "dataset_empty_rows": 0,
+        "dataset_number_of_samples": 25000,
+        "dataset_sample_max_len": 12988,
+        "dataset_sample_min_len": 32
     },
     "starmpcc/Asclepius-Synthetic-Clinical-Notes": {
         "dataset_columns": 5,
@@ -310,13 +318,5 @@
         "dataset_number_of_samples": 307,
         "dataset_sample_max_len": 717,
         "dataset_sample_min_len": 12
-    },
-    "xnli": {
-        "dataset_columns": 3,
-        "dataset_duplicates": 0,
-        "dataset_empty_rows": 0,
-        "dataset_number_of_samples": 2490,
-        "dataset_sample_max_len": 310,
-        "dataset_sample_min_len": 8
     }
 }

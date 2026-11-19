@@ -132,11 +132,11 @@ def main() -> None:
 
         if dataset_name == "seara/ru_go_emotions":
             importer = RuGoRawDataImporter(dataset_name)
-        elif dataset_name == "imdb":
+        elif dataset_name == "stanfordnlp/imdb":
             importer = ImdbDataImporter(dataset_name)
         elif dataset_name == "dair-ai/emotion":
             importer = DairAiEmotionDataImporter(dataset_name)
-        elif dataset_name == "ag_news":
+        elif dataset_name == "fancyzhx/ag_news":
             importer = AgNewsDataImporter(dataset_name)
         elif dataset_name == "papluca/language-identification":
             importer = LanguageIdentificationDataImporter(dataset_name)
@@ -148,7 +148,7 @@ def main() -> None:
             importer = ClinicalNotesRawDataImporter(dataset_name)
         elif dataset_name == "HuggingFaceH4/no_robots":
             importer = NoRobotsRawDataImporter(dataset_name)
-        elif dataset_name == "sberquad":
+        elif dataset_name == "kuznetsoffandrey/sberquad":
             importer = SberquadRawDataImporter(dataset_name)
         elif dataset_name == "RussianNLP/wikiomnia":
             importer = WikiOmniaRawDataImporter(dataset_name)
@@ -162,7 +162,7 @@ def main() -> None:
             importer = GlueDataImporter(dataset_name)
         elif dataset_name == DatasetTypes.TERRA.value:
             importer = RussianSuperGlueDataImporte(dataset_name)
-        elif dataset_name == "cnn_dailymail":
+        elif dataset_name == "abisee/cnn_dailymail":
             importer = DailymailRawDataImporter(dataset_name)
         elif dataset_name == "d0rj/curation-corpus-ru":
             importer = RuCorpusRawDataImporter(dataset_name)
@@ -217,11 +217,11 @@ def main() -> None:
             preprocessor = WikiToxicRawDataPreprocessor(importer.raw_data)
         elif dataset_name == "seara/ru_go_emotions":
             preprocessor = RuGoEmotionsRawDataPreprocessor(importer.raw_data)
-        elif dataset_name == "imdb":
+        elif dataset_name == "stanfordnlp/imdb":
             preprocessor = ImdbDataPreprocessor(importer.raw_data)
         elif dataset_name == "dair-ai/emotion":
             preprocessor = DairAiEmotionPreprocessor(importer.raw_data)
-        elif dataset_name == "ag_news":
+        elif dataset_name == "fancyzhx/ag_news":
             preprocessor = AgNewsPreprocessor(importer.raw_data)
         elif dataset_name == "papluca/language-identification":
             preprocessor = LanguageIdentificationPreprocessor(importer.raw_data)
@@ -231,7 +231,7 @@ def main() -> None:
             preprocessor = ClinicalNotesRawDataPreprocessor(importer.raw_data)
         elif dataset_name == "HuggingFaceH4/no_robots":
             preprocessor = NoRobotsRawDataPreprocessor(importer.raw_data)
-        elif dataset_name == "sberquad":
+        elif dataset_name == "kuznetsoffandrey/sberquad":
             preprocessor = SberquadRawDataPreprocessor(importer.raw_data)
         elif dataset_name == "RussianNLP/wikiomnia":
             preprocessor = WikiOmniaRawDataPreprocessor(importer.raw_data)
@@ -249,7 +249,7 @@ def main() -> None:
             preprocessor = PubMedRawDataPreprocessor(importer.raw_data)
         elif dataset_name == "ccdv/govreport-summarization":
             preprocessor = GovReportRawDataPreprocessor(importer.raw_data)
-        elif dataset_name == "cnn_dailymail":
+        elif dataset_name == "abisee/cnn_dailymail":
             preprocessor = DailymailRawDataPreprocessor(importer.raw_data)
         elif dataset_name == "IlyaGusev/gazeta":
             preprocessor = RuGazetaRawDataPreprocessor(importer.raw_data)

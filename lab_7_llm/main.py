@@ -5,7 +5,23 @@ Working with Large Language Models.
 """
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
+
+from pathlib import Path
 from typing import Iterable, Sequence
+
+import pandas as pd
+import torch
+from datasets import load_dataset
+from pandas import DataFrame
+from torch.utils.data import Dataset
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -21,6 +37,11 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
+        raw_dataset = load_dataset(self._hf_name, split='test').to_pandas()
+        if not isinstance(raw_dataset, pd.DataFrame):
+            raise TypeError('pd.DataFrame was expected not: {type(raw_dataset)}')
+
+        self._raw_data = raw_dataset
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
@@ -35,12 +56,28 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         Returns:
             dict: Dataset key properties
         """
+        dataset_properties = {
+            'dataset_number_of_samples' : len(self._raw_data),
+            'dataset_columns' : len(self._raw_data.columns),
+            'dataset_duplicates' : self._raw_data.duplicated().sum(),
+            'dataset_empty_rows' : self._raw_data.isna().any(axis=1).sum(),
+            'dataset_sample_min_len' : self._data[ColumnNames.SOURCE.value].str.len().min(),
+            'dataset_sample_max_len' : self._data[ColumnNames.SOURCE.value].str.len().max()
+        }
+
+        return dataset_properties
 
     @report_time
     def transform(self) -> None:
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        data = self._raw_data.dropna(ignore_index=True)
+        data = data.rename(columns={
+            'en': ColumnNames.SOURCE.value, 
+            'fr': ColumnNames.TARGET.value})
+        
+        self._data = data
 
 
 class TaskDataset(Dataset):
@@ -55,6 +92,7 @@ class TaskDataset(Dataset):
         Args:
             data (pandas.DataFrame): Original data
         """
+        self._data = data
 
     def __len__(self) -> int:
         """
@@ -63,6 +101,7 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -74,6 +113,7 @@ class TaskDataset(Dataset):
         Returns:
             tuple[str, ...]: The item to be received
         """
+        return (self._data.iloc[index],)
 
     @property
     def data(self) -> DataFrame:
@@ -83,6 +123,7 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -103,6 +144,10 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        super().__init__(model_name, dataset, max_length, batch_size, device)
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self._model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
+
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

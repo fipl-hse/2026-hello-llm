@@ -1,7 +1,7 @@
 {
   "parameters": {
-    "model": "",
-    "dataset": "",
+    "model": "timpal0l/mdeberta-v3-base-squad2",
+    "dataset": "HuggingFaceH4/no_robots",
     "metrics": []
   },
   "target_score": 4

@@ -13,7 +13,8 @@ from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, Co
 from core_utils.llm.task_evaluator import AbstractTaskEvaluator
 from core_utils.llm.time_decorator import report_time
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 import datasets
 import pandas as pd
 
@@ -65,18 +66,17 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
 
         df = df[df['category'] == "Closed QA"]
 
-        df = df[['prompt', 'messages']]
+        df = df[['prompt', 'messages']].copy()
 
-        df["messages"] = df["messages"].apply(lambda x: f"{x}")
-        
         df = df.rename(columns={"prompt": "question"})
-        
-        df = df.reset_index(drop=True)
 
-        parsed = df["messages"].apply(json.loads)
-        df[ColumnNames.CONTEXT.value] = parsed.str[0].str["content"]
-        df[ColumnNames.TARGET.value] = parsed.str[1].str["content"]
+        df[ColumnNames.CONTEXT.value] = df["messages"].apply(lambda messages: messages[0]["content"])
+        
+        df[ColumnNames.TARGET.value] = df["messages"].apply(lambda messages: messages[1]["content"])
+
         df = df.drop(columns=["messages"])
+
+        df = df.reset_index(drop=True)
         
         self._data = df
 
@@ -93,6 +93,7 @@ class TaskDataset(Dataset):
         Args:
             data (pandas.DataFrame): Original data
         """
+        self._data = data.head(100)
 
     def __len__(self) -> int:
         """
@@ -101,6 +102,7 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -112,6 +114,7 @@ class TaskDataset(Dataset):
         Returns:
             tuple[str, ...]: The item to be received
         """
+        return tuple(self._data.iloc[index].values)
 
     @property
     def data(self) -> DataFrame:
@@ -121,6 +124,7 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -141,6 +145,15 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        self._model_name = model_name
+        self._dataset = dataset
+        self._max_length = max_length
+        self._batch_size = batch_size
+        self._device = device
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self._model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        self._model.to(self._device)
+        self._model.eval() 
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

@@ -9,12 +9,21 @@
             ],
             "settings": {
                 "ignore": [
-                    "lab_8_sft"
+                    "lab_8_analysis",
+                    "lab_9_sft"
                 ]
             }
         },
         {
-            "name": "lab_8_sft",
+            "name": "lab_8_analysis",
+            "coverage": 79,
+            "stubs": [
+                "main.py",
+                "start.py"
+            ]
+        },
+        {
+            "name": "lab_9_sft",
             "coverage": 78,
             "stubs": [
                 "main.py",
@@ -117,7 +126,7 @@
         "specific_file_rules": {
             "service.py": {
                 "replacement": {
-                    "lab_8_sft": "app, pre_trained_pipeline, fine_tuned_pipeline = None, None, None"
+                    "lab_9_sft": "app, pre_trained_pipeline, fine_tuned_pipeline = None, None, None"
                 }
             }
         }

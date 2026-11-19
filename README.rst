@@ -24,12 +24,12 @@ Laboratory Works
    * Milestone: **November 27**
    * Deadline: **December 18**
 
-2. `Laboratory work #8. LLM Interpretation <https://github.com/fipl-hse/2026-hello-llm/tree/main/lab_8_sft>`__
+2. `Laboratory work #8. LLM Analysis <https://github.com/fipl-hse/2026-hello-llm/tree/main/lab_8_analysis>`__
 
    * Milestone: **TBA**
    * Deadline: **TBA**
 
-3. `Laboratory work #9. Parameter-Efficient Fine-Tuning <https://github.com/fipl-hse/2026-hello-llm/tree/main/lab_9_lora>`__
+3. `Laboratory work #9. Parameter-Efficient Fine-Tuning <https://github.com/fipl-hse/2026-hello-llm/tree/main/lab_9_sft>`__
 
    * Milestone: **TBA**
    * Deadline: **TBA**

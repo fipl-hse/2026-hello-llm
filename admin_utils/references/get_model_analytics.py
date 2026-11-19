@@ -31,7 +31,7 @@ from admin_utils.references.models import (
     EvaluationReferencesModel,
     ModelAnalyticsModel,
 )
-from lab_8_sft.main import LLMPipeline, TaskDataset
+from lab_8_analysis.main import LLMPipeline, TaskDataset
 
 
 def get_references(path: Path) -> Any:

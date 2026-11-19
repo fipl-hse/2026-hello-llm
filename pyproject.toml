@@ -17,7 +17,8 @@ markers = [
     "reference_lab_generation: tests for generation task",
     "reference_lab_open_qa: tests for open generative Q&A task",
     "lab_7_llm: tests for lab 7",
-    "lab_8_sft: tests for lab 8",
+    "lab_8_analysis: tests for lab 8",
+    "lab_9_sft: tests for lab 9",
 ]
 norecursedirs = [
     "venv*"
@@ -85,7 +86,8 @@ src_paths = [
     "admin_utils",
     "core_utils",
     "lab_7_llm",
-    "lab_8_sft",
+    "lab_8_analysis",
+    "lab_9_sft",
     "reference_lab_classification",
     "reference_lab_classification_sft",
     "reference_lab_summarization",
@@ -149,7 +151,7 @@ disable_error_code = [
 
 [[tool.mypy.overrides]]
 module = [
-    'lab_8_sft.service',
+    'lab_9_sft.service',
 ]
 disable_error_code = [
     'no-any-unimported',
@@ -160,7 +162,8 @@ disable_error_code = [
 [[tool.mypy.overrides]]
 module = [
     'lab_7_llm.main',
-    'lab_8_sft.main',
+    'lab_8_analysis.main',
+    'lab_9_sft.main',
 ]
 disable_error_code = [
     'import-not-found',
@@ -202,10 +205,13 @@ module = [
     'lab_7_llm.main_stub',
     'lab_7_llm.start',
     'lab_7_llm.start_stub',
-    'lab_8_sft.main_stub',
-    'lab_8_sft.start',
-    'lab_8_sft.start_stub',
-    'lab_8_sft.service_stub',
+    'lab_8_analysis.main_stub',
+    'lab_8_analysis.start',
+    'lab_8_analysis.start_stub',
+    'lab_9_sft.main_stub',
+    'lab_9_sft.start',
+    'lab_9_sft.start_stub',
+    'lab_9_sft.service_stub',
 ]
 disable_error_code = [
     'empty-body',
@@ -215,7 +221,7 @@ disable_error_code = [
 [[tool.mypy.overrides]]
 module = [
     'admin_utils.constants',
-    'lab_8_sft.tests.web_service_test',
+    'lab_9_sft.tests.web_service_test',
 ]
 disable_error_code = [
     'no-redef',

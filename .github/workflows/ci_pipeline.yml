@@ -11,7 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  GITHUB_REPOSITORY: ${{ github.repository }}
   REPOSITORY_TYPE: public
+  BRANCH_NAME: ${{ github.ref }}
 
 jobs:
   install-dependencies:

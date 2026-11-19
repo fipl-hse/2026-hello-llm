@@ -15,7 +15,8 @@ else
     "core_utils"
     "seminars"
     "lab_7_llm"
-    "lab_8_sft"
+    "lab_8_analysis"
+    "lab_9_sft"
     "reference_lab_classification"
     "reference_lab_classification_sft"
     "reference_lab_generation"
@@ -74,5 +75,6 @@ if [[ "$1" != "public" ]]; then
   fi
 
   python -m pytest -m "mark10 and lab_7_llm"
-  python -m pytest -m "mark10 and lab_8_sft"
+  python -m pytest -m "mark10 and lab_8_analysis"
+  python -m pytest -m "mark10 and lab_9_sft"
 fi

@@ -28,6 +28,9 @@ def main() -> None:
     importer = RawDataImporter(settings.parameters.dataset)
     importer.obtain()
 
+    if importer.raw_data is None:
+        raise RuntimeError("Dataset was not loaded successfully")
+
     preprocessor = RawDataPreprocessor(importer.raw_data)
 
     dataset_analysis = preprocessor.analyze()
@@ -46,6 +49,9 @@ def main() -> None:
         batch_size=GLOBAL_BATCH_SIZE_TEST,
         device=DEVICE,
     )
+
+    sample_prediction = pipeline.infer_sample(sample := dataset[0])
+    print(f"Single sample inference:\nSource: {sample[0]}\nReference: {sample[1]}\nPrediction: {sample_prediction}\n")
 
     result = pipeline.infer_dataset()
     PREDICTS_PATH.parent.mkdir(parents=True, exist_ok=True)

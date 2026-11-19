@@ -202,7 +202,7 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_predicts = self._infer_batch(batch)
             predicts.extend(batch_predicts)
 
-        result = self._dataset.data.copy()
+        result: pd.DataFrame = self._dataset.data.copy()
         result[ColumnNames.PREDICTION.value] = predicts
 
         return result
@@ -232,7 +232,7 @@ class LLMPipeline(AbstractLLMPipeline):
 
         generated_ids = self._model.generate(**inputs, max_length=self._max_length)
 
-        predicts = self._tokenizer.batch_decode(
+        predicts: list[str] = self._tokenizer.batch_decode(
             generated_ids,
             skip_special_tokens=True,
         )

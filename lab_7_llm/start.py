@@ -50,8 +50,13 @@ def main() -> None:
         device=DEVICE,
     )
 
-    sample_prediction = pipeline.infer_sample(sample := dataset[0])
-    print(f"Single sample inference:\nSource: {sample[0]}\nReference: {sample[1]}\nPrediction: {sample_prediction}\n")
+    s = dataset[0]
+    print(
+        f"Single sample inference:\n"
+        f"Source: {s[0]}\n"
+        f"Reference: {s[1]}\n"
+        f"Prediction: {pipeline.infer_sample(s)}"
+    )
 
     result = pipeline.infer_dataset()
     PREDICTS_PATH.parent.mkdir(parents=True, exist_ok=True)

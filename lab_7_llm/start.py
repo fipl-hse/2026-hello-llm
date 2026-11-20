@@ -5,15 +5,19 @@ Starter for demonstration of laboratory work.
 # pylint: disable=too-many-locals, undefined-variable, unused-import
 
 import json
-from admin_utils.constants import (
-    GLOBAL_BATCH_SIZE_TEST,
-    GLOBAL_MAX_LENGTH,
-    DEVICE,
-)
 from pathlib import Path
-from core_utils.llm.time_decorator import report_time
-from lab_7_llm.main import LLMPipeline, RawDataImporter, RawDataPreprocessor, TaskDataset
+
 from transformers import AutoConfig
+
+from admin_utils.constants import DEVICE, GLOBAL_BATCH_SIZE_TEST, GLOBAL_MAX_LENGTH
+from core_utils.llm.time_decorator import report_time
+from lab_7_llm.main import (
+    LLMPipeline,
+    RawDataImporter,
+    RawDataPreprocessor,
+    TaskDataset,
+)
+
 
 @report_time
 def main() -> None:
@@ -29,14 +33,15 @@ def main() -> None:
     model_name = settings["parameters"]["model"]
     dataset_name = settings["parameters"]["dataset"]
 
-    importer = RawDataImporter(settings['parameters']['dataset'])
+    importer = RawDataImporter(settings["parameters"]["dataset"])
     importer.obtain()
 
     preprocessor = RawDataPreprocessor(importer.raw_data)
     preprocessor.analyze()
     preprocessor.transform()
 
-    dataset = TaskDataset(preprocessor.data.iloc[: 100])
+    if preprocessor.data is not None:
+        dataset = TaskDataset(preprocessor.data.iloc[:100])
 
     pipeline = LLMPipeline(
         model_name=model_name,

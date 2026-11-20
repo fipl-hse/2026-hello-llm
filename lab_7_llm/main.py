@@ -6,17 +6,26 @@ Working with Large Language Models.
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 import json
+from pathlib import Path
 from typing import Iterable, Sequence
-from core_utils.llm.llm_pipeline import AbstractLLMPipeline
-from core_utils.llm.raw_data_importer import AbstractRawDataImporter
-from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
-from core_utils.llm.task_evaluator import AbstractTaskEvaluator
-from core_utils.llm.time_decorator import report_time
-import torch
-from torch.utils.data import DataLoader, Dataset
-from transformers import AutoTokenizer, AutoModelForQuestionAnswering
+
 import datasets
 import pandas as pd
+import torch
+from pandas import DataFrame
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline, HFModelLike
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import (
+    AbstractRawDataPreprocessor,
+    ColumnNames,
+)
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
+
 
 class RawDataImporter(AbstractRawDataImporter):
     """
@@ -25,7 +34,7 @@ class RawDataImporter(AbstractRawDataImporter):
 
     def __init__(self, hf_name: str):
         super().__init__(hf_name)
-    
+
     @report_time
     def obtain(self) -> None:
         """
@@ -35,15 +44,17 @@ class RawDataImporter(AbstractRawDataImporter):
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
 
-        df = datasets.load_dataset(self._hf_name, split=datasets.Split.TRAIN).to_pandas()
+        hf_name = self._hf_name
+        if isinstance(hf_name, str) and hf_name is not None:
+            df = datasets.load_dataset(path=hf_name, split="train").to_pandas()
         if not isinstance(df, pd.DataFrame):
-            raise TypeError('Downloaded dataset is not pd.DataFrame')
+            raise TypeError("Downloaded dataset is not pd.DataFrame")
         self._raw_data = df
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
     """
-    A class that analyzes and preprocesses a dataset.
+    A class that analyzeyzes and preprocesses a dataset.
     """
 
     def __init__(self, raw_data):
@@ -56,6 +67,9 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         Returns:
             dict: Dataset key properties
         """
+        ...
+
+        return dict()
 
     @report_time
     def transform(self) -> None:
@@ -64,20 +78,24 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         """
         df = self._raw_data.copy()
 
-        df = df[df['category'] == "Closed QA"]
+        df = df[df["category"] == "Closed QA"]
 
-        df = df[['prompt', 'messages']].copy()
+        df = df[["prompt", "messages"]].copy()
 
         df = df.rename(columns={"prompt": "question"})
 
-        df[ColumnNames.CONTEXT.value] = df["messages"].apply(lambda messages: messages[0]["content"])
-        
-        df[ColumnNames.TARGET.value] = df["messages"].apply(lambda messages: messages[1]["content"])
+        df[ColumnNames.CONTEXT.value] = df["messages"].apply(
+            lambda messages: messages[0]["content"]
+        )
+
+        df[ColumnNames.TARGET.value] = df["messages"].apply(
+            lambda messages: messages[1]["content"]
+        )
 
         df = df.drop(columns=["messages"])
 
         df = df.reset_index(drop=True)
-        
+
         self._data = df
 
 
@@ -133,7 +151,12 @@ class LLMPipeline(AbstractLLMPipeline):
     """
 
     def __init__(
-        self, model_name: str, dataset: TaskDataset, max_length: int, batch_size: int, device: str
+        self,
+        model_name: str,
+        dataset: TaskDataset,
+        max_length: int,
+        batch_size: int,
+        device: str,
     ) -> None:
         """
         Initialize an instance.
@@ -151,9 +174,10 @@ class LLMPipeline(AbstractLLMPipeline):
         self._batch_size = batch_size
         self._device = device
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self._model = AutoModelForQuestionAnswering.from_pretrained(model_name)
-        self._model.to(self._device)
-        self._model.eval() 
+        model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        model.to(self._device)
+        model.eval()
+        self._model = model
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:
@@ -175,6 +199,8 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
+        ...
+        return pd.DataFrame()
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -187,6 +213,9 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
+        ...
+
+        return list("")
 
 
 class TaskEvaluator(AbstractTaskEvaluator):
@@ -210,4 +239,6 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
+        ...
 
+        return dict()

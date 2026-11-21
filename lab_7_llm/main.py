@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 import datasets
+import numpy as np
 import pandas as pd
 import torch
 from pandas import DataFrame
@@ -61,15 +62,45 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         super().__init__(raw_data)
 
     def analyze(self) -> dict:
-        """
-        Analyze a dataset.
+        """Analyze the raw dataset and return its key properties."""
 
-        Returns:
-            dict: Dataset key properties
-        """
-        ...
+        raw_data = self._raw_data
+        source_column = "prompt"
 
-        return dict()
+        key_parameters = {
+            "dataset_number_of_samples": -1,
+            "dataset_columns": -1,
+            "dataset_duplicates": -1,
+            "dataset_empty_rows": -1,
+            "dataset_sample_min_len": -1,
+            "dataset_sample_max_len": -1,
+        }
+
+        key_parameters["dataset_number_of_samples"] = int(len(raw_data))
+
+        key_parameters["dataset_columns"] = int(len(raw_data.columns))
+
+        row_signatures = raw_data.apply(
+            lambda row: json.dumps(
+                row.to_dict(), sort_keys=True, default=str, ensure_ascii=False
+            ),
+            axis=1,
+        )
+
+        key_parameters["dataset_duplicates"] = int(row_signatures.duplicated().sum())
+
+        empty_rows = raw_data[source_column].isna() | raw_data[source_column].astype(
+            str
+        ).str.strip().eq("")
+        dataset_empty_rows = int(empty_rows.sum())
+        key_parameters["dataset_empty_rows"] = dataset_empty_rows
+
+        clean_data = raw_data.loc[~empty_rows]
+        lengths = clean_data[source_column].astype(str).str.len()
+        key_parameters["dataset_sample_max_len"] = int(lengths.max())
+        key_parameters["dataset_sample_min_len"] = int(lengths.min())
+
+        return key_parameters
 
     @report_time
     def transform(self) -> None:

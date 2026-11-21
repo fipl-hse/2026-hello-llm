@@ -33,9 +33,6 @@ class RawDataImporter(AbstractRawDataImporter):
     A class that imports the HuggingFace dataset.
     """
 
-    def __init__(self, hf_name: str):
-        super().__init__(hf_name)
-
     @report_time
     def obtain(self) -> None:
         """
@@ -45,9 +42,8 @@ class RawDataImporter(AbstractRawDataImporter):
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
 
-        hf_name = self._hf_name
-        if isinstance(hf_name, str) and hf_name is not None:
-            df = datasets.load_dataset(path=hf_name, split="train").to_pandas()
+        if isinstance(self._hf_name, str) and self._hf_name is not None:
+            df = datasets.load_dataset(path=self._hf_name, split="train").to_pandas()
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Downloaded dataset is not pd.DataFrame")
         self._raw_data = df
@@ -55,14 +51,16 @@ class RawDataImporter(AbstractRawDataImporter):
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
     """
-    A class that analyzeyzes and preprocesses a dataset.
+    A class that analyzes and preprocesses a dataset.
     """
 
-    def __init__(self, raw_data):
-        super().__init__(raw_data)
-
     def analyze(self) -> dict:
-        """Analyze the raw dataset and return its key properties."""
+        """
+        Analyze a dataset.
+
+        Returns:
+            dict: Dataset key properties
+        """
 
         raw_data = self._raw_data
         source_column = "prompt"
@@ -182,12 +180,7 @@ class LLMPipeline(AbstractLLMPipeline):
     """
 
     def __init__(
-        self,
-        model_name: str,
-        dataset: TaskDataset,
-        max_length: int,
-        batch_size: int,
-        device: str,
+        self, model_name: str, dataset: TaskDataset, max_length: int, batch_size: int, device: str
     ) -> None:
         """
         Initialize an instance.
@@ -199,13 +192,9 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
-        self._model_name = model_name
-        self._dataset = dataset
-        self._max_length = max_length
-        self._batch_size = batch_size
-        self._device = device
+        super().__init__(model_name, dataset, max_length, batch_size, device)
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        model = AutoModelForQuestionAnswering.from_pretrained(model_name, dtype=torch.float32)
         model.to(self._device)
         model.eval()
         self._model = model
@@ -230,7 +219,6 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
-        ...
         return pd.DataFrame()
 
     @torch.no_grad()
@@ -244,8 +232,6 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
-        ...
-
         return list("")
 
 
@@ -270,6 +256,4 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
-        ...
-
         return dict()

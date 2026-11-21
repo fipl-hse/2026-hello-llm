@@ -3,5 +3,7 @@
         "."
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.terminal.useEnvFile": true,
+    "python.testing.unittestArgs": ["-v", "-s", ".", "-p", "test_*.py"],
 }

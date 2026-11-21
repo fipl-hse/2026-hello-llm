@@ -94,9 +94,26 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         key_parameters["dataset_empty_rows"] = dataset_empty_rows
 
         clean_data = raw_data.loc[~empty_rows]
-        lengths = clean_data[source_column].astype(str).str.len()
-        key_parameters["dataset_sample_max_len"] = int(lengths.max())
-        key_parameters["dataset_sample_min_len"] = int(lengths.min())
+
+        prompt_lengths = clean_data["prompt"].astype(str).str.len()
+
+        message_lengths = clean_data["messages"].apply(
+            lambda messages: sum(
+                len(str(message.get("content", "")))
+                for message in messages
+                if isinstance(message, dict)
+            )
+        )
+
+        lengths = pd.concat([prompt_lengths, message_lengths])
+
+        key_parameters["dataset_sample_max_len"] = (
+            int(lengths.max()) if not lengths.empty else 0
+        )
+
+        key_parameters["dataset_sample_min_len"] = (
+            int(lengths.min()) if not lengths.empty else 0
+        )
 
         return key_parameters
 

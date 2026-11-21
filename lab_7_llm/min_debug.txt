@@ -1,0 +1,46 @@
+
+clean_data = raw_data.loc[~empty_rows]
+
+all_lengths = []
+
+for idx, row in clean_data.iterrows():
+
+    prompt = str(row["prompt"])
+    all_lengths.append({
+        "row_idx": idx,
+        "column": "prompt",
+        "length": len(prompt),
+        "content": prompt
+    })
+
+    messages = row["messages"]
+
+    message_content = "\n".join(
+        str(message.get("content", ""))
+        for message in messages
+        if isinstance(message, dict)
+    )
+
+    all_lengths.append({
+        "row_idx": idx,
+        "column": "messages",
+        "length": len(message_content),
+        "content": message_content
+    })
+
+shortest = min(all_lengths, key=lambda x: x["length"])
+
+print(f"Shortest length: {shortest['length']}")
+print(f"Row index: {shortest['row_idx']}")
+print(f"Column: {shortest['column']}")
+print("\nContent:")
+print(shortest["content"])
+print(f"Prompt ID: {raw_data.loc[shortest['row_idx'], 'prompt_id']}")
+Shortest length: 13
+
+Row index: 1630
+Column: prompt
+
+Content:
+What is ASMR?
+Prompt ID: 1567b28d9b1b66415d98bbc0be2b10d9cdf28035ff850c45f8045ec9bbe9b2c0

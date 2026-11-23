@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 from datasets import load_dataset
 from pandas import DataFrame
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 from transformers import LlamaForCausalLM, LlamaTokenizer
 
 from core_utils.llm.llm_pipeline import AbstractLLMPipeline
@@ -56,7 +56,7 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         Returns:
             dict: Dataset key properties
         """
-        data = self._raw_data.copy()
+        data = self._raw_data.replace("", pd.NA)
         lengths = data.dropna()["instruction"].map(len)
         return {
             "dataset_number_of_samples": data.shape[0],
@@ -160,6 +160,7 @@ class LLMPipeline(AbstractLLMPipeline):
             device,
         )
         self._tokenizer = LlamaTokenizer.from_pretrained(model_name)
+        self._tokenizer.pad_token = self._tokenizer.eos_token
         self._model = LlamaForCausalLM.from_pretrained(model_name).to(device)
 
     @report_time
@@ -173,6 +174,10 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             str | None: A prediction
         """
+        if self._model is None:
+            return None
+
+        return self._infer_batch([(sample[0],)])[0]
 
     @report_time
     def infer_dataset(self) -> pd.DataFrame:
@@ -182,6 +187,21 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
+        data_loader = DataLoader(
+            self._dataset,
+            batch_size=self._batch_size,
+        )
+
+        predictions = []
+        for batch in data_loader:
+            predictions.extend(self._infer_batch(batch))
+
+        return DataFrame(
+            {
+                ColumnNames.TARGET.value: self._dataset.data[ColumnNames.TARGET.value],
+                ColumnNames.PREDICTION.value: predictions,
+            }
+        )
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -194,6 +214,27 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
+        input_idx = self._tokenizer(
+            list(sample_batch[0]),
+            padding=True,
+            truncation=True,
+            max_length=self._max_length,
+            return_tensors="pt"
+        ).to(self._device)
+
+        generate_ids = self._model.generate(
+            **input_idx,
+            max_length=self._max_length
+        )
+
+        predictions = self._tokenizer.batch_decode(
+            generate_ids[
+                :,
+                input_idx["input_ids"].shape[1]:
+            ],
+            skip_special_tokens=True,
+        )
+        return [prediction.strip() for prediction in predictions]
 
 
 class TaskEvaluator(AbstractTaskEvaluator):

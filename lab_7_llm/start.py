@@ -33,10 +33,12 @@ def main() -> None:
 
     importer = RawDataImporter(settings.parameters.dataset)
     importer.obtain()
+
     preprocessor = RawDataPreprocessor(importer.raw_data)
     data_info = preprocessor.analyze()
     print_data_info(data_info)
     preprocessor.transform()
+
     dataset = TaskDataset(preprocessor.data.iloc[:100])
 
     pipeline = LLMPipeline(
@@ -46,8 +48,10 @@ def main() -> None:
         batch_size=constants.GLOBAL_BATCH_SIZE_TEST,
         device=constants.DEVICE,
     )
-
-    result = pipeline
+    print(pipeline.infer_sample(dataset[67]))
+    result = pipeline.infer_dataset()
+    constants.DIST_PATH.mkdir(parents=True, exist_ok=True)
+    result.to_csv(constants.DIST_PATH / "predictions.csv", index=False)
     assert result is not None, "Demo does not work correctly"
 
 

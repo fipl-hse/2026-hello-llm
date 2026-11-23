@@ -20,7 +20,7 @@ def main() -> None:
     """
     with open(Path(__file__).parent / 'settings.json', 'r', encoding='utf-8') as f:
         settings = json.load(f)
-    importer = RawDataImporter(settings.parameters.dataset)
+    importer = RawDataImporter(settings['parameters']['dataset'])
     if importer.raw_data is None:
         raise ValueError('"importer.raw_data" is None')
 

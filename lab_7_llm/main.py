@@ -5,7 +5,22 @@ Working with Large Language Models.
 """
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
+from pathlib import Path
 from typing import Iterable, Sequence
+
+import pandas as pd
+import torch
+from datasets import load_dataset
+from pandas import DataFrame
+from torch.utils.data import Dataset
+from transformers import LlamaForCausalLM, LlamaTokenizer
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -21,6 +36,9 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
+        self._raw_data = load_dataset(self._hf_name, split="train").to_pandas()
+        if not isinstance(self._raw_data, pd.DataFrame):
+            raise TypeError
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
@@ -41,6 +59,20 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        data = self._raw_data.copy()
+        data = data[data["category"] == "open_qa"]
+        data.drop(
+            columns=["context", "category", "__index_level_0__"],
+            inplace=True,
+        )
+        data.rename(
+            columns={
+                "instruction": ColumnNames.QUESTION.value,
+                "response": ColumnNames.TARGET.value,
+            },
+            inplace=True
+        )
+        self._data = data
 
 
 class TaskDataset(Dataset):
@@ -55,6 +87,7 @@ class TaskDataset(Dataset):
         Args:
             data (pandas.DataFrame): Original data
         """
+        self._data = data
 
     def __len__(self) -> int:
         """
@@ -63,6 +96,7 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+        return self._data.shape[0]
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -74,6 +108,7 @@ class TaskDataset(Dataset):
         Returns:
             tuple[str, ...]: The item to be received
         """
+        return tuple(self._data.iloc[index])
 
     @property
     def data(self) -> DataFrame:
@@ -83,6 +118,7 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -103,6 +139,15 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        super().__init__(
+            model_name,
+            dataset,
+            max_length,
+            batch_size,
+            device,
+        )
+        self._tokenizer = LlamaTokenizer.from_pretrained(model_name)
+        self._model = LlamaForCausalLM.from_pretrained(model_name).to(device)
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

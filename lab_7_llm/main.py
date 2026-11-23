@@ -5,8 +5,8 @@ Working with Large Language Models.
 """
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
 import pandas as pd
 import torch
@@ -18,7 +18,10 @@ from transformers import LlamaForCausalLM, LlamaTokenizer
 from core_utils.llm.llm_pipeline import AbstractLLMPipeline
 from core_utils.llm.metrics import Metrics
 from core_utils.llm.raw_data_importer import AbstractRawDataImporter
-from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
+from core_utils.llm.raw_data_preprocessor import (
+    AbstractRawDataPreprocessor,
+    ColumnNames,
+)
 from core_utils.llm.task_evaluator import AbstractTaskEvaluator
 from core_utils.llm.time_decorator import report_time
 
@@ -53,6 +56,16 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         Returns:
             dict: Dataset key properties
         """
+        data = self._raw_data.copy()
+        lengths = data.dropna()["instruction"].map(len)
+        return {
+            "dataset_number_of_samples": data.shape[0],
+            "dataset_columns": data.shape[1],
+            "dataset_duplicates": int(data.duplicated().sum()),
+            "dataset_empty_rows": int(data.isna().any(axis=1).sum()),
+            "dataset_sample_min_len": int(lengths.min()),
+            "dataset_sample_max_len": int(lengths.max()),
+        }
 
     @report_time
     def transform(self) -> None:
@@ -70,7 +83,7 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
                 "instruction": ColumnNames.QUESTION.value,
                 "response": ColumnNames.TARGET.value,
             },
-            inplace=True
+            inplace=True,
         )
         self._data = data
 

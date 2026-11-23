@@ -24,20 +24,20 @@
     },
     "EleutherAI/pythia-160m-deduped": {
         "domenicrosati/TruthfulQA": {
-            "bleu": 0.00592,
-            "rouge": 0.04498
+            "bleu": 0.00685,
+            "rouge": 0.04704
         },
         "jtatman/databricks-dolly-8k-qa-open-close": {
-            "bleu": 0.01911,
-            "rouge": 0.09607
+            "bleu": 0.02344,
+            "rouge": 0.10601
         },
         "lionelchg/dolly_open_qa": {
-            "bleu": 0.01293,
-            "rouge": 0.08938
+            "bleu": 0.01307,
+            "rouge": 0.08999
         },
         "tatsu-lab/alpaca": {
-            "bleu": 0.01446,
-            "rouge": 0.09483
+            "bleu": 0.01726,
+            "rouge": 0.10478
         }
     },
     "Helsinki-NLP/opus-mt-en-fr": {
@@ -112,7 +112,7 @@
         }
     },
     "XSY/albert-base-v2-imdb-calssification": {
-        "imdb": {
+        "stanfordnlp/imdb": {
             "f1": 0.73999
         }
     },
@@ -133,7 +133,7 @@
         "cointegrated/nli-rus-translated-v2021": {
             "accuracy": 0.78000
         },
-        "xnli": {
+        "facebook/xnli": {
             "accuracy": 0.30999
         }
     },
@@ -163,7 +163,7 @@
         }
     },
     "fabriceyhc/bert-base-uncased-ag_news": {
-        "ag_news": {
+        "fancyzhx/ag_news": {
             "f1": 0.95999
         }
     },
@@ -173,6 +173,10 @@
         }
     },
     "mrm8488/bert-mini2bert-mini-finetuned-cnn_daily_mail-summarization": {
+        "abisee/cnn_dailymail": {
+            "bleu": 0.05496,
+            "rouge": 0.22158
+        },
         "ccdv/govreport-summarization": {
             "bleu": 0.00000,
             "rouge": 0.07016
@@ -180,13 +184,13 @@
         "ccdv/pubmed-summarization": {
             "bleu": 0.00622,
             "rouge": 0.12685
-        },
-        "cnn_dailymail": {
-            "bleu": 0.05496,
-            "rouge": 0.22158
         }
     },
     "mrm8488/bert-small2bert-small-finetuned-cnn_daily_mail-summarization": {
+        "abisee/cnn_dailymail": {
+            "bleu": 0.05774,
+            "rouge": 0.22063
+        },
         "ccdv/govreport-summarization": {
             "bleu": 0.00000,
             "rouge": 0.06920
@@ -194,13 +198,13 @@
         "ccdv/pubmed-summarization": {
             "bleu": 0.00574,
             "rouge": 0.12992
-        },
-        "cnn_dailymail": {
-            "bleu": 0.05774,
-            "rouge": 0.22063
         }
     },
     "nandakishormpai/t5-small-machine-articles-tag-generation": {
+        "abisee/cnn_dailymail": {
+            "bleu": 0.06624,
+            "rouge": 0.17864
+        },
         "ccdv/govreport-summarization": {
             "bleu": 0.00000,
             "rouge": 0.02879
@@ -208,10 +212,6 @@
         "ccdv/pubmed-summarization": {
             "bleu": 0.00048,
             "rouge": 0.07849
-        },
-        "cnn_dailymail": {
-            "bleu": 0.06624,
-            "rouge": 0.17864
         }
     },
     "papluca/xlm-roberta-base-language-detection": {
@@ -242,11 +242,11 @@
         "RussianNLP/wikiomnia": {
             "squad": 29.72222
         },
+        "kuznetsoffandrey/sberquad": {
+            "squad": 43.75875
+        },
         "lionelchg/dolly_closed_qa": {
             "squad": 20.42480
-        },
-        "sberquad": {
-            "squad": 43.75875
         },
         "starmpcc/Asclepius-Synthetic-Clinical-Notes": {
             "squad": 5.19840

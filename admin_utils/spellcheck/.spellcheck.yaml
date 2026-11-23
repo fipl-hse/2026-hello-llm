@@ -15,7 +15,9 @@ matrix:
       ignores:
       - :matches(code, pre)
   sources:
-  - 'docs/**/*[^_ru].rst'
+  - 'README.rst'
+  - '*/*.api.rst'
+  - '*/*/*.api.rst'
   - 'final_project/*.rst'
   default_encoding: utf-8
 
@@ -39,7 +41,6 @@ matrix:
   - 'lab*/*.rst'
   - 'final_project/*.rst'
   - '*.rst'
-  - 'docs/**/*_ru.rst'
   default_encoding: utf-8
 
 - name: docstrings

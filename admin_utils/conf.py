@@ -37,7 +37,7 @@ intersphinx_mapping = {
     "fastapi": ("https://fastapi.tiangolo.com/", "admin_utils/intersphinx/fastapi.inv"),
 }
 
-exclude_patterns = ["venv/*", "docs/private/*"]
+exclude_patterns = ["venv/*"]
 
 nitpick_ignore = [
     ("py:class", "transformers.models.auto.tokenization_auto.AutoTokenizer"),

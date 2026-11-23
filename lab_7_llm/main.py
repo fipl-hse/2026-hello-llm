@@ -257,7 +257,7 @@ class TaskEvaluator(AbstractTaskEvaluator):
 
             value = metric_result.get(metric_name)
             if value is None and metric_name == "rouge":
-                value = metric_result.get("rougeLsum")
+                value = metric_result.get("rougeL")
 
             result[metric_name] = float(value)
 

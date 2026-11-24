@@ -1,8 +1,8 @@
 {
   "parameters": {
     "model": "",
-    "dataset": "",
+    "dataset": "Arsive/toxicity_classification_jigsaw",
     "metrics": []
   },
-  "target_score": 0
+  "target_score": 4
 }

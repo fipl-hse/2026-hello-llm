@@ -4,8 +4,23 @@ Laboratory work.
 Working with Large Language Models.
 """
 
+from pathlib import Path
+
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 from typing import Iterable, Sequence
+
+import pandas as pd
+import torch
+from datasets import load_dataset
+from pandas import DataFrame
+from torch.utils.data import Dataset
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -21,6 +36,10 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
+        raw_dataset = load_dataset(self._hf_name, split="validation").to_pandas()
+        if not isinstance(raw_dataset, pd.DataFrame):
+            raise TypeError("Installed dataset is not pd.DataFrame")
+        self._raw_data = raw_dataset
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
@@ -41,6 +60,12 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        dataset = self._raw_data[['question', 'context', 'answers']]
+        dataset.rename(columns={'answers': ColumnNames.TARGET.value}, inplace=True)
+
+        dataset['target'] = dataset['target'].apply(lambda x: x.get('text')[0])
+
+        self._data = dataset
 
 
 class TaskDataset(Dataset):
@@ -55,6 +80,7 @@ class TaskDataset(Dataset):
         Args:
             data (pandas.DataFrame): Original data
         """
+        self._data = data
 
     def __len__(self) -> int:
         """
@@ -63,6 +89,7 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -74,6 +101,7 @@ class TaskDataset(Dataset):
         Returns:
             tuple[str, ...]: The item to be received
         """
+        return list(self._data.itertuples(index=False, name=None))[index]
 
     @property
     def data(self) -> DataFrame:
@@ -83,6 +111,7 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -103,6 +132,11 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        self._model_name = model_name
+        self._dataset = dataset
+        self._device = device
+        self._batch_size = batch_size
+        self._max_length = max_length
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

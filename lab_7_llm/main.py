@@ -5,7 +5,25 @@ Working with Large Language Models.
 """
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
+
+from pathlib import Path
 from typing import Iterable, Sequence
+
+import numpy as np
+import pandas as pd
+import torch
+from datasets import load_dataset
+from evaluate import load
+from pandas import DataFrame
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -21,6 +39,9 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
+        self._raw_data = load_dataset(self._hf_name, split="train").to_pandas()
+        if not isinstance(self.raw_data, DataFrame):
+            raise TypeError("Downloaded dataset is not a pd.DataFrame")
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
@@ -35,12 +56,31 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         Returns:
             dict: Dataset key properties
         """
+        temp = self._raw_data.replace('', np.nan)
+        temp = temp.dropna(axis=0)
+
+        analysis = {
+            'dataset_number_of_samples': len(self._raw_data),
+            'dataset_columns': len(self._raw_data.columns),
+            'dataset_duplicates': int(self._raw_data.duplicated().sum()),
+            'dataset_empty_rows': int((self._raw_data == "").any(axis=1).sum()),
+            'dataset_sample_min_len': int(temp['instruction'].dropna(axis=0).str.len().min()),
+            'dataset_sample_max_len': int(temp['instruction'].dropna(axis=0).str.len().max())
+        }
+
+        return analysis
 
     @report_time
     def transform(self) -> None:
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        data = self._raw_data.drop(labels = ['input', 'text'], axis=1)
+        data.rename(columns = {
+            'instruction': ColumnNames.QUESTION.value,
+            'response': ColumnNames.TARGET.value},
+            inplace = True)
+        self._data = data
 
 
 class TaskDataset(Dataset):
@@ -55,6 +95,7 @@ class TaskDataset(Dataset):
         Args:
             data (pandas.DataFrame): Original data
         """
+        self._data = data
 
     def __len__(self) -> int:
         """
@@ -63,6 +104,7 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -74,6 +116,7 @@ class TaskDataset(Dataset):
         Returns:
             tuple[str, ...]: The item to be received
         """
+        return (self._data.iloc[index]['question'],)
 
     @property
     def data(self) -> DataFrame:
@@ -83,6 +126,7 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -103,6 +147,11 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        super().__init__(model_name, dataset, max_length, batch_size, device)
+        self._model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m-deduped",
+                                                           dtype=torch.float32)
+        self._tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-160m-deduped",
+                                                        padding_side="left")
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:
@@ -115,6 +164,10 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             str | None: A prediction
         """
+        if self._model is None:
+            return None
+
+        return self._infer_batch([sample])[0]
 
     @report_time
     def infer_dataset(self) -> pd.DataFrame:
@@ -124,6 +177,17 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
+        dataloader = DataLoader(self._dataset, batch_size=self._batch_size,
+                                shuffle=False, drop_last=False,
+                                collate_fn=lambda samples: samples)
+        predictions = []
+        for batch in dataloader:
+            predictions.extend(self._infer_batch(batch))
+
+        return DataFrame({
+            'target': self._dataset.data['output'],
+            'predictions': predictions
+        })
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -136,6 +200,24 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
+        texts = []
+        for sample in sample_batch:
+            if len(sample) == 1:
+                texts.append(sample[0])
+            else:
+                texts.append(" ".join(sample))
+
+        inputs = self._tokenizer(
+            texts,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=self._max_length
+        ).to(self._device)
+
+        outputs = self._model.generate(**inputs, max_length=self._max_length)
+        decoded = self._tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        return [text[len(prompt) + 1:] for text, prompt in zip(decoded, texts)]
 
 
 class TaskEvaluator(AbstractTaskEvaluator):
@@ -151,6 +233,8 @@ class TaskEvaluator(AbstractTaskEvaluator):
             data_path (pathlib.Path): Path to predictions
             metrics (Iterable[Metrics]): List of metrics to check
         """
+        self._metrics = metrics
+        self._data_path = data_path
 
     def run(self) -> dict:
         """
@@ -159,3 +243,22 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
+        targets_predictions_df = pd.read_csv(self._data_path)
+
+        result = {}
+
+        for metric in self._metrics:
+            metric_name = metric.value if isinstance(metric, Metrics) else str(metric)
+            metric_loaded = load(metric_name)
+            metric_result = metric_loaded.compute(
+                predictions=targets_predictions_df['predictions'].to_list(),
+                references=targets_predictions_df['target'].to_list(),
+            )
+
+            value = metric_result.get(metric_name)
+            if value is None and metric_name == "rouge":
+                value = metric_result.get("rougeL")
+
+            result[metric_name] = float(value)
+
+        return result

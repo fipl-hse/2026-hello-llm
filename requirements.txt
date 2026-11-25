@@ -1,0 +1,8 @@
+absl-py==2.5.1
+datasets==5.2.0
+evaluate==0.4.6
+nltk==3.10.4
+pandas==3.1.1
+rouge_score==0.1.2
+torch==2.14.1 --extra-index-url https://download.pytorch.org/whl/cpu
+transformers==5.20.1

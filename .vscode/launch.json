@@ -103,6 +103,28 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "[SEMINAR 4] Learn Classification",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/seminars/listing_7_classification.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "[SEMINAR 4] Learn Generation",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/seminars/listing_8_generation.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
         }
     ]
 }

@@ -230,11 +230,10 @@ disable_error_code = [
 
 [[tool.mypy.overrides]]
 module = [
-    'seminars.seminar_02_02_2026.try_fastapi',
-    'seminars.seminar_02_16_2026.try_gpu',
+    'seminars.listing_7_classification',
+    'seminars.listing_8_generation',
 ]
 disable_error_code = [
-    'import-not-found',
     'no-any-unimported',
 ]
 

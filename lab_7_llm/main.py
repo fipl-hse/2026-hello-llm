@@ -4,8 +4,25 @@ Laboratory work.
 Working with Large Language Models.
 """
 
+from pathlib import Path
+
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 from typing import Iterable, Sequence
+
+import numpy as np
+import pandas as pd
+import torch
+from datasets import load_dataset
+from pandas import DataFrame
+from torch.utils.data import Dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor, ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -22,6 +39,11 @@ class RawDataImporter(AbstractRawDataImporter):
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
 
+        dataframe = load_dataset(self._hf_name, split="train").to_pandas()
+        if not isinstance(dataframe, DataFrame):
+            raise TypeError("Dataset is not pd.DataFrame")
+        self._raw_data = dataframe
+
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
     """
@@ -36,11 +58,42 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
             dict: Dataset key properties
         """
 
+        num_samples = self._raw_data.shape[0]
+        num_columns = self._raw_data.shape[1]
+
+        num_duplicates = self._raw_data.duplicated().sum()
+
+        num_empty = (self._raw_data.isnull() | (self._raw_data == "")).any(axis=1).sum()
+
+        no_empty = self._raw_data[(self._raw_data.notna() & (self._raw_data != "")).all(axis=1)]
+
+        min_len = no_empty["instruction"].str.len().min()
+        max_len = no_empty["instruction"].str.len().max()
+
+        return {
+            "dataset_number_of_samples": int(num_samples),
+            "dataset_columns": int(num_columns),
+            "dataset_duplicates": int(num_duplicates),
+            "dataset_empty_rows": int(num_empty),
+            "dataset_sample_min_len": int(min_len),
+            "dataset_sample_max_len": int(max_len),
+        }
+
     @report_time
     def transform(self) -> None:
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        data = self._raw_data[self._raw_data["category"] == "open_qa"]
+        data = data.drop(columns=["context", "category", "__index_level_0__"])
+        data = data.rename(
+            columns={
+                "instruction": ColumnNames.QUESTION.value,
+                "response": ColumnNames.TARGET.value,
+            }
+        )
+
+        self._data = data
 
 
 class TaskDataset(Dataset):
@@ -56,6 +109,8 @@ class TaskDataset(Dataset):
             data (pandas.DataFrame): Original data
         """
 
+        self._data = data
+
     def __len__(self) -> int:
         """
         Return the number of items in the dataset.
@@ -63,6 +118,8 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -75,6 +132,8 @@ class TaskDataset(Dataset):
             tuple[str, ...]: The item to be received
         """
 
+        return tuple(self._data.iloc[index][["question", "target"]])
+
     @property
     def data(self) -> DataFrame:
         """
@@ -83,6 +142,8 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -103,6 +164,13 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        self._model_name = model_name
+        self._dataset = dataset
+        self._max_length = max_length
+        self._batch_size = batch_size
+        self._device = device
+        self._tokenizer = AutoTokenizer.from_pretrained(self._model_name, padding_side='left')
+        self._model = AutoModelForCausalLM.from_pretrained(self._model_name, torch_dtype=torch.float32)
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

@@ -1,8 +1,8 @@
 {
   "parameters": {
-    "model": "",
-    "dataset": "",
+    "model": "EleutherAI/pythia-160m-deduped",
+    "dataset": "jtatman/databricks-dolly-8k-qa-open-close",
     "metrics": []
   },
-  "target_score": 0
+  "target_score": 6
 }

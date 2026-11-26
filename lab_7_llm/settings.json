@@ -1,8 +1,8 @@
 {
   "parameters": {
-    "model": "",
-    "dataset": "",
+    "model": "JackFram/llama-68m",
+    "dataset": "tatsu-lab/alpaca",
     "metrics": []
   },
-  "target_score": 0
+  "target_score": 8
 }

@@ -6,6 +6,38 @@ Working with Large Language Models.
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 from typing import Iterable, Sequence
+try:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+except ImportError:
+    print('Library "transformers" not installed. Failed to import.')
+    AutoTokenizer, AutoModelForSequenceClassification = None, None
+
+try:
+    import pandas as pd
+except ImportError:
+    print('Library "pandas" not installed. Failed to import.')
+    pd = None
+
+try:
+    from datasets import load_dataset
+except ImportError:
+    print('Library "datasets" not installed. Failed to import.')
+    load_dataset = None
+
+try:
+    import torch
+except ImportError:
+    print('Library "PyTorch" not installed. Failed to import.')
+    torch = None
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor
+from core_utils.llm.raw_data_preprocessor import ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
+from pathlib import Path
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -21,6 +53,16 @@ class RawDataImporter(AbstractRawDataImporter):
         Raises:
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
+
+        ds = load_dataset(self._hf_name, split='validation')
+        ds = ds.to_pandas()
+
+        if not isinstance(ds, pd.DataFrame):
+            raise TypeError(f'Downloaded dataset is  {type(ds)}, must be pd.DataFrame,')
+
+        print('Dataset imported!')
+
+        self._raw_data = ds
 
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
@@ -41,9 +83,21 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        df = self._raw_data.copy()
+
+        df = df.drop(columns=['id', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'])
+        df = df.rename(columns={
+            'toxicity': ColumnNames.TARGET.value,
+            'comment_text': ColumnNames.SOURCE.value
+        })
+        df = df.reset_index(drop=True)
+
+        print('Dataset preprocessed!')
+
+        self._data = df
 
 
-class TaskDataset(Dataset):
+class TaskDataset(torch.utils.data.Dataset):
     """
     A class that converts pd.DataFrame to Dataset and works with it.
     """
@@ -56,6 +110,8 @@ class TaskDataset(Dataset):
             data (pandas.DataFrame): Original data
         """
 
+        self._data = data
+
     def __len__(self) -> int:
         """
         Return the number of items in the dataset.
@@ -63,6 +119,8 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -75,14 +133,17 @@ class TaskDataset(Dataset):
             tuple[str, ...]: The item to be received
         """
 
+        return self._data.iloc[index]
+
     @property
-    def data(self) -> DataFrame:
+    def data(self) -> pd.DataFrame:
         """
         Property with access to preprocessed DataFrame.
 
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -103,6 +164,13 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        super().__init__(model_name=model_name,
+                         dataset=dataset,
+                         max_length=max_length,
+                         batch_size=batch_size)
+
+        self._device = device
+        self._model = AutoModelForSequenceClassification.from_pretrained(self._model_name, device_map=self._device)
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

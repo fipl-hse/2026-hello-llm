@@ -6,11 +6,17 @@ Working with Large Language Models.
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 from typing import Iterable, Sequence
+try:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+except ImportError:
+    print('Library "transformers" not installed. Failed to import.')
+    AutoTokenizer, AutoModelForSequenceClassification = None, None
 
 try:
     import pandas as pd
 except ImportError:
     print('Library "pandas" not installed. Failed to import.')
+    pd = None
 
 try:
     from datasets import load_dataset
@@ -19,16 +25,19 @@ except ImportError:
     load_dataset = None
 
 try:
-    from torch.utils.data import Dataset
+    import torch
 except ImportError:
     print('Library "PyTorch" not installed. Failed to import.')
-    load_dataset = None
+    torch = None
 
 from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
 from core_utils.llm.raw_data_importer import AbstractRawDataImporter
 from core_utils.llm.raw_data_preprocessor import AbstractRawDataPreprocessor
 from core_utils.llm.raw_data_preprocessor import ColumnNames
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
 from core_utils.llm.time_decorator import report_time
+from pathlib import Path
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -50,6 +59,8 @@ class RawDataImporter(AbstractRawDataImporter):
 
         if not isinstance(ds, pd.DataFrame):
             raise TypeError(f'Downloaded dataset is  {type(ds)}, must be pd.DataFrame,')
+
+        print('Dataset imported!')
 
         self._raw_data = ds
 
@@ -80,10 +91,13 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
             'comment_text': ColumnNames.SOURCE.value
         })
         df = df.reset_index(drop=True)
+
+        print('Dataset preprocessed!')
+
         self._data = df
 
 
-class TaskDataset(Dataset):
+class TaskDataset(torch.utils.data.Dataset):
     """
     A class that converts pd.DataFrame to Dataset and works with it.
     """
@@ -150,6 +164,13 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        super().__init__(model_name=model_name,
+                         dataset=dataset,
+                         max_length=max_length,
+                         batch_size=batch_size)
+
+        self._device = device
+        self._model = AutoModelForSequenceClassification.from_pretrained(self._model_name, device_map=self._device)
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:

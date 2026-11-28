@@ -98,13 +98,9 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         prompt_lengths = clean_data["prompt"].astype(str).str.len()
 
         message_lengths = clean_data["messages"].apply(
-            lambda messages: sum(
-                len(str(message.get("content", "")))
-                for message in messages
-                if isinstance(message, dict)
-            )
-        )
-
+                    lambda messages: len(f"{messages}")
+                    )
+        
         lengths = pd.concat([prompt_lengths, message_lengths])
 
         key_parameters["dataset_sample_max_len"] = (
@@ -236,7 +232,7 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
-        return pd.DataFrame()
+        ...
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:

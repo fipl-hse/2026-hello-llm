@@ -7,8 +7,6 @@ Starter for demonstration of laboratory work.
 import json
 from pathlib import Path
 
-from transformers import AutoConfig
-
 from admin_utils.constants import DEVICE, GLOBAL_BATCH_SIZE_TEST, GLOBAL_MAX_LENGTH
 from core_utils.llm.time_decorator import report_time
 from lab_7_llm.main import (
@@ -35,14 +33,18 @@ def main() -> None:
     model_name = settings["parameters"]["model"]
     dataset_name = settings["parameters"]["dataset"]
 
+    if dataset_name is None:
+        raise ValueError("Dataset name hasn't been specified")
     importer = RawDataImporter(dataset_name)
     importer.obtain()
-
+    if importer.raw_data is None:
+        raise ValueError("Raw data is None")
     preprocessor = RawDataPreprocessor(importer.raw_data)
     preprocessor.transform()
 
-    if preprocessor.data is not None:
-        dataset = TaskDataset(preprocessor.data.iloc[:100])
+    if preprocessor.data is None:
+        raise ValueError("Data is None after transform")
+    dataset = TaskDataset(preprocessor.data.iloc[:100])
 
     pipeline = LLMPipeline(
         model_name=model_name,
@@ -51,8 +53,8 @@ def main() -> None:
         batch_size=GLOBAL_BATCH_SIZE_TEST,
         device=DEVICE,
     )
-    
-    print(f"Loaded model: {pipeline._model_name}")
+
+    print(f"Loaded model: {model_name}")
     print(f"Loaded dataset: {dataset_name}")
 
     print("Mark 6: Dataset properties analysis")
@@ -60,19 +62,20 @@ def main() -> None:
     dataset_properties = preprocessor.analyze()
     print(dataset_properties)
 
-    print("Mark 8: Model inference on one sample from the dataset and on the whole dataset")
-    
+    print(
+        "Mark 8: Model inference on one sample from the dataset and on the whole dataset"
+    )
+
     sample = dataset[0]
     print(pipeline.infer_sample(sample))
-    predictions  = pipeline.infer_dataset()
+    result = pipeline.infer_dataset()
 
     output_path = Path(__file__).parent / "dist" / "predictions.csv"
-    output_path.parent.mkdir(parents=True, exist_ok=True)    
-    predictions.to_csv(output_path, index=False)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    result.to_csv(output_path, index=False)
     print(f"Predictions have been saved: {output_path}")
-    print(predictions.head())
+    print(result.head())
 
-    result = [pipeline, dataset_properties, predictions]
     assert result is not None, "Demo does not work correctly"
 
 

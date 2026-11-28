@@ -10,14 +10,13 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 import datasets
-import numpy as np
 import pandas as pd
 import torch
 from pandas import DataFrame
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
-from core_utils.llm.llm_pipeline import AbstractLLMPipeline, HFModelLike
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
 from core_utils.llm.metrics import Metrics
 from core_utils.llm.raw_data_importer import AbstractRawDataImporter
 from core_utils.llm.raw_data_preprocessor import (
@@ -98,9 +97,9 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         prompt_lengths = clean_data["prompt"].astype(str).str.len()
 
         message_lengths = clean_data["messages"].apply(
-                    lambda messages: len(f"{messages}")
-                    )
-        
+            lambda messages: len(f"{messages}")
+        )
+
         lengths = pd.concat([prompt_lengths, message_lengths])
 
         key_parameters["dataset_sample_max_len"] = (
@@ -193,7 +192,12 @@ class LLMPipeline(AbstractLLMPipeline):
     """
 
     def __init__(
-        self, model_name: str, dataset: TaskDataset, max_length: int, batch_size: int, device: str
+        self,
+        model_name: str,
+        dataset: TaskDataset,
+        max_length: int,
+        batch_size: int,
+        device: str,
     ) -> None:
         """
         Initialize an instance.
@@ -207,7 +211,9 @@ class LLMPipeline(AbstractLLMPipeline):
         """
         super().__init__(model_name, dataset, max_length, batch_size, device)
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForQuestionAnswering.from_pretrained(model_name, dtype=torch.float32)
+        model = AutoModelForQuestionAnswering.from_pretrained(
+            model_name, dtype=torch.float32
+        )
         model.to(self._device)
         model.eval()
         self._model = model
@@ -225,7 +231,7 @@ class LLMPipeline(AbstractLLMPipeline):
         """
         if self._model is None:
             return None
-        
+
         return self._infer_batch([sample])[0]
 
     @report_time
@@ -249,10 +255,12 @@ class LLMPipeline(AbstractLLMPipeline):
             predictions.extend(self._infer_batch(sample_batch))
             targets.extend([sample[2] for sample in sample_batch])
 
-        return pd.DataFrame({
-            "target": targets,
-            "predictions": predictions,
-        })
+        return pd.DataFrame(
+            {
+                "target": targets,
+                "predictions": predictions,
+            }
+        )
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -268,9 +276,7 @@ class LLMPipeline(AbstractLLMPipeline):
         if self._model is None:
             return []
 
-        questions, contexts = zip(
-            *[(sample[0], sample[1]) for sample in sample_batch]
-        )
+        questions, contexts = zip(*[(sample[0], sample[1]) for sample in sample_batch])
 
         tokens = self._tokenizer(
             list(questions),
@@ -281,10 +287,7 @@ class LLMPipeline(AbstractLLMPipeline):
             return_tensors="pt",
         )
 
-        tokens = {
-            key: value.to(self._device)
-            for key, value in tokens.items()
-        }
+        tokens = {key: value.to(self._device) for key, value in tokens.items()}
 
         output = self._model(**tokens)
 
@@ -298,9 +301,7 @@ class LLMPipeline(AbstractLLMPipeline):
             start_positions,
             end_positions,
         ):
-            answer_ids.append(
-                input_ids[start.item():end.item() + 1].tolist()
-            )
+            answer_ids.append(input_ids[start.item() : end.item() + 1].tolist())
 
         predictions = self._tokenizer.batch_decode(
             answer_ids,
@@ -331,4 +332,4 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
-        return dict()
+        return {}

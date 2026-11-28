@@ -5,7 +5,26 @@ Working with Large Language Models.
 """
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
+import json
+from pathlib import Path
 from typing import Iterable, Sequence
+
+import datasets
+import pandas as pd
+import torch
+from pandas import DataFrame
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+
+from core_utils.llm.llm_pipeline import AbstractLLMPipeline
+from core_utils.llm.metrics import Metrics
+from core_utils.llm.raw_data_importer import AbstractRawDataImporter
+from core_utils.llm.raw_data_preprocessor import (
+    AbstractRawDataPreprocessor,
+    ColumnNames,
+)
+from core_utils.llm.task_evaluator import AbstractTaskEvaluator
+from core_utils.llm.time_decorator import report_time
 
 
 class RawDataImporter(AbstractRawDataImporter):
@@ -22,6 +41,12 @@ class RawDataImporter(AbstractRawDataImporter):
             TypeError: In case of downloaded dataset is not pd.DataFrame
         """
 
+        if isinstance(self._hf_name, str) and self._hf_name is not None:
+            df = datasets.load_dataset(path=self._hf_name, split="train").to_pandas()
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("Downloaded dataset is not pd.DataFrame")
+        self._raw_data = df
+
 
 class RawDataPreprocessor(AbstractRawDataPreprocessor):
     """
@@ -36,11 +61,83 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
             dict: Dataset key properties
         """
 
+        raw_data = self._raw_data
+        source_column = "prompt"
+
+        key_parameters = {
+            "dataset_number_of_samples": -1,
+            "dataset_columns": -1,
+            "dataset_duplicates": -1,
+            "dataset_empty_rows": -1,
+            "dataset_sample_min_len": -1,
+            "dataset_sample_max_len": -1,
+        }
+
+        key_parameters["dataset_number_of_samples"] = int(len(raw_data))
+
+        key_parameters["dataset_columns"] = int(len(raw_data.columns))
+
+        row_signatures = raw_data.apply(
+            lambda row: json.dumps(
+                row.to_dict(), sort_keys=True, default=str, ensure_ascii=False
+            ),
+            axis=1,
+        )
+
+        key_parameters["dataset_duplicates"] = int(row_signatures.duplicated().sum())
+
+        empty_rows = raw_data[source_column].isna() | raw_data[source_column].astype(
+            str
+        ).str.strip().eq("")
+        dataset_empty_rows = int(empty_rows.sum())
+        key_parameters["dataset_empty_rows"] = dataset_empty_rows
+
+        clean_data = raw_data.loc[~empty_rows]
+
+        prompt_lengths = clean_data["prompt"].astype(str).str.len()
+
+        message_lengths = clean_data["messages"].apply(
+            lambda messages: len(f"{messages}")
+        )
+
+        lengths = pd.concat([prompt_lengths, message_lengths])
+
+        key_parameters["dataset_sample_max_len"] = (
+            int(lengths.max()) if not lengths.empty else 0
+        )
+
+        key_parameters["dataset_sample_min_len"] = (
+            int(lengths.min()) if not lengths.empty else 0
+        )
+
+        return key_parameters
+
     @report_time
     def transform(self) -> None:
         """
         Apply preprocessing transformations to the raw dataset.
         """
+        df = self._raw_data.copy()
+
+        df = df[df["category"] == "Closed QA"]
+
+        df = df[["prompt", "messages"]].copy()
+
+        df = df.rename(columns={"prompt": "question"})
+
+        df[ColumnNames.CONTEXT.value] = df["messages"].apply(
+            lambda messages: messages[0]["content"]
+        )
+
+        df[ColumnNames.TARGET.value] = df["messages"].apply(
+            lambda messages: messages[1]["content"]
+        )
+
+        df = df.drop(columns=["messages"])
+
+        df = df.reset_index(drop=True)
+
+        self._data = df
 
 
 class TaskDataset(Dataset):
@@ -55,6 +152,7 @@ class TaskDataset(Dataset):
         Args:
             data (pandas.DataFrame): Original data
         """
+        self._data = data.head(100)
 
     def __len__(self) -> int:
         """
@@ -63,6 +161,7 @@ class TaskDataset(Dataset):
         Returns:
             int: The number of items in the dataset
         """
+        return len(self._data)
 
     def __getitem__(self, index: int) -> tuple[str, ...]:
         """
@@ -74,6 +173,7 @@ class TaskDataset(Dataset):
         Returns:
             tuple[str, ...]: The item to be received
         """
+        return tuple(self._data.iloc[index].values)
 
     @property
     def data(self) -> DataFrame:
@@ -83,6 +183,7 @@ class TaskDataset(Dataset):
         Returns:
             pandas.DataFrame: Preprocessed DataFrame
         """
+        return self._data
 
 
 class LLMPipeline(AbstractLLMPipeline):
@@ -91,7 +192,12 @@ class LLMPipeline(AbstractLLMPipeline):
     """
 
     def __init__(
-        self, model_name: str, dataset: TaskDataset, max_length: int, batch_size: int, device: str
+        self,
+        model_name: str,
+        dataset: TaskDataset,
+        max_length: int,
+        batch_size: int,
+        device: str,
     ) -> None:
         """
         Initialize an instance.
@@ -103,6 +209,14 @@ class LLMPipeline(AbstractLLMPipeline):
             batch_size (int): The size of the batch inside DataLoader
             device (str): The device for inference
         """
+        super().__init__(model_name, dataset, max_length, batch_size, device)
+        self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForQuestionAnswering.from_pretrained(
+            model_name, dtype=torch.float32
+        )
+        model.to(self._device)
+        model.eval()
+        self._model = model
 
     @report_time
     def infer_sample(self, sample: tuple[str, ...]) -> str | None:
@@ -115,6 +229,10 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             str | None: A prediction
         """
+        if self._model is None:
+            return None
+
+        return self._infer_batch([sample])[0]
 
     @report_time
     def infer_dataset(self) -> pd.DataFrame:
@@ -124,6 +242,25 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
+        dataloader = DataLoader(
+            dataset=self._dataset,
+            batch_size=self._batch_size,
+            collate_fn=lambda batch: batch,
+        )
+
+        targets = []
+        predictions = []
+
+        for sample_batch in dataloader:
+            predictions.extend(self._infer_batch(sample_batch))
+            targets.extend([sample[2] for sample in sample_batch])
+
+        return pd.DataFrame(
+            {
+                "target": targets,
+                "predictions": predictions,
+            }
+        )
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -136,6 +273,42 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
+        if self._model is None:
+            return []
+
+        questions, contexts = zip(*[(sample[0], sample[1]) for sample in sample_batch])
+
+        tokens = self._tokenizer(
+            list(questions),
+            list(contexts),
+            padding=True,
+            truncation=True,
+            max_length=self._max_length,
+            return_tensors="pt",
+        )
+
+        tokens = {key: value.to(self._device) for key, value in tokens.items()}
+
+        output = self._model(**tokens)
+
+        start_positions = torch.argmax(output.start_logits, dim=1)
+        end_positions = torch.argmax(output.end_logits, dim=1)
+
+        answer_ids = []
+
+        for input_ids, start, end in zip(
+            tokens["input_ids"],
+            start_positions,
+            end_positions,
+        ):
+            answer_ids.append(input_ids[start.item() : end.item() + 1].tolist())
+
+        predictions = self._tokenizer.batch_decode(
+            answer_ids,
+            skip_special_tokens=True,
+        )
+
+        return [prediction.strip() for prediction in predictions]
 
 
 class TaskEvaluator(AbstractTaskEvaluator):
@@ -159,3 +332,4 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
+        return {}

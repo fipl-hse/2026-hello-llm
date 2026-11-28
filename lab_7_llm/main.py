@@ -223,6 +223,10 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             str | None: A prediction
         """
+        if self._model is None:
+            return None
+        
+        return self._infer_batch([sample])[0]
 
     @report_time
     def infer_dataset(self) -> pd.DataFrame:
@@ -232,7 +236,23 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             pd.DataFrame: Data with predictions
         """
-        ...
+        dataloader = DataLoader(
+            dataset=self._dataset,
+            batch_size=self._batch_size,
+            collate_fn=lambda batch: batch,
+        )
+
+        targets = []
+        predictions = []
+
+        for sample_batch in dataloader:
+            predictions.extend(self._infer_batch(sample_batch))
+            targets.extend([sample[2] for sample in sample_batch])
+
+        return pd.DataFrame({
+            "target": targets,
+            "predictions": predictions,
+        })
 
     @torch.no_grad()
     def _infer_batch(self, sample_batch: Sequence[tuple[str, ...]]) -> list[str]:
@@ -245,7 +265,49 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
-        return list("")
+        if self._model is None:
+            return []
+
+        questions, contexts = zip(
+            *[(sample[0], sample[1]) for sample in sample_batch]
+        )
+
+        tokens = self._tokenizer(
+            list(questions),
+            list(contexts),
+            padding=True,
+            truncation=True,
+            max_length=self._max_length,
+            return_tensors="pt",
+        )
+
+        tokens = {
+            key: value.to(self._device)
+            for key, value in tokens.items()
+        }
+
+        output = self._model(**tokens)
+
+        start_positions = torch.argmax(output.start_logits, dim=1)
+        end_positions = torch.argmax(output.end_logits, dim=1)
+
+        answer_ids = []
+
+        for input_ids, start, end in zip(
+            tokens["input_ids"],
+            start_positions,
+            end_positions,
+        ):
+            answer_ids.append(
+                input_ids[start.item():end.item() + 1].tolist()
+            )
+
+        predictions = self._tokenizer.batch_decode(
+            answer_ids,
+            skip_special_tokens=True,
+        )
+
+        return [prediction.strip() for prediction in predictions]
 
 
 class TaskEvaluator(AbstractTaskEvaluator):

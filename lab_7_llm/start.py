@@ -60,7 +60,19 @@ def main() -> None:
     dataset_properties = preprocessor.analyze()
     print(dataset_properties)
 
-    result = [pipeline, dataset_properties]
+    print("Mark 8: Model inference on one sample from the dataset and on the whole dataset")
+    
+    sample = dataset[0]
+    print(pipeline.infer_sample(sample))
+    predictions  = pipeline.infer_dataset()
+
+    output_path = Path(__file__).parent / "dist" / "predictions.csv"
+    output_path.parent.mkdir(parents=True, exist_ok=True)    
+    predictions.to_csv(output_path, index=False)
+    print(f"Predictions have been saved: {output_path}")
+    print(predictions.head())
+
+    result = [pipeline, dataset_properties, predictions]
     assert result is not None, "Demo does not work correctly"
 
 

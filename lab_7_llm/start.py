@@ -51,26 +51,17 @@ def main() -> None:
         batch_size=GLOBAL_BATCH_SIZE_TEST,
         device=DEVICE,
     )
-
-    print(f"Loaded model: {model_name}")
+    
+    print(f"Loaded model: {pipeline._model_name}")
     print(f"Loaded dataset: {dataset_name}")
 
     print("Mark 6: Dataset properties analysis")
 
-    print(preprocessor.analyze())
+    dataset_properties = preprocessor.analyze()
+    print(dataset_properties)
 
-    # reference
-    # "HuggingFaceH4/no_robots": {
-    #     "dataset_columns": 4,
-    #     "dataset_duplicates": 0,
-    #     "dataset_empty_rows": 1,
-    #     "dataset_number_of_samples": 9500,
-    #     "dataset_sample_max_len": 14005,
-    #     "dataset_sample_min_len": 13
-    # },
-
-    result = None
-    # assert result is not None, "Demo does not work correctly"
+    result = [pipeline, dataset_properties]
+    assert result is not None, "Demo does not work correctly"
 
 
 if __name__ == "__main__":

@@ -208,7 +208,7 @@ def main() -> None:
 
         if (
             model_name == "mrm8488/bert-small2bert-small-finetuned-cnn_daily_mail-summarization"
-            and dataset_name == "cnn_dailymail"
+            and dataset_name == "abisee/cnn_dailymail"
         ):
             sft_params.alpha = 48
             sft_params.learning_rate = 1e-5

@@ -8,7 +8,7 @@ from ast import literal_eval
 from pathlib import Path
 
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
-from typing import Any, cast, Iterable, Sequence
+from typing import Iterable, Sequence
 
 import pandas as pd
 import torch
@@ -174,7 +174,7 @@ class LLMPipeline(AbstractLLMPipeline):
         if self._model is None:
             return None
 
-        return cast(str, self._infer_batch([sample])[0])
+        return str(self._infer_batch([sample])[0])
 
     @report_time
     def infer_dataset(self) -> pd.DataFrame:
@@ -280,4 +280,7 @@ class TaskEvaluator(AbstractTaskEvaluator):
 
         accuracy = load(next(iter(self._metrics)).value)
 
-        return cast(dict[Any, Any], accuracy.compute(references=refs, predictions=preds))
+        result = accuracy.compute(references=refs, predictions=preds)
+        if not isinstance(result, dict):
+            raise TypeError("Metric result must be a dictionary")
+        return result
